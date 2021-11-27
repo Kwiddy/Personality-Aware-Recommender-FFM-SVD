@@ -156,6 +156,8 @@ def generate_scores(df, parent_path):
     new_path = parent_path + "Movie_and_TV_5_personality.csv"
     ffm_df.to_csv(new_path)
 
+    return ffm_df
+
 
 # combine user reviews
 def create_corpora(df, parent_path):
@@ -210,4 +212,8 @@ def review_APR(df, parent_path):
     corpora_df = create_corpora(df, parent_path)
 
     # create scores from corpus
-    generate_scores(corpora_df, parent_path)
+    new_path = parent_path + "Movie_and_TV_5_personality.csv"
+    if exists(new_path):
+        ffm_df = pd.read_csv(new_path)
+    else:
+        ffm_df = generate_scores(corpora_df, parent_path)
