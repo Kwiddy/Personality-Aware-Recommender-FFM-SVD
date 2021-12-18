@@ -40,6 +40,7 @@ def create_svd(original_df, ffm_df, user_ID):
         map_1[i] = id
         map_2[id] = i
         item_scores[id] = 0 
+        i += 1
 
     # 1 = {i: id}
     # 1.5 = {id: i}
@@ -57,18 +58,33 @@ def create_svd(original_df, ffm_df, user_ID):
         highest_sim_col = -1
         for col in range(1,vh.shape[1]):
             similarity = cosine_similarity(vh[:,item_location], vh[:,col])
-            item_scores[item_id] += similarity
+            # print(similarity)
+            # find id of item being compared 
+            compared_id = map_1[col]
+            item_scores[compared_id] += similarity
+            # print(item_scores[item_id])
             if similarity > highest_similarity:
                 highest_similarity = similarity
                 highest_sim_col = col
     
-    print("Column %d is most similar to column 0" % highest_sim_col)
+    # print("Column %d is most similar to column 0" % highest_sim_col)
 
+    # print(item_scores)
     # For each item, total its cosine-similarities to each item that the user has reviewed, output the k most similar items
-    sorted_similarities = dict( sorted(d.items(), key=operator.itemgetter(1),reverse=True))
+    sorted_similarities = dict( sorted(item_scores.items(), key=lambda item: item[1], reverse=True))
 
-    top_100 = list(sorted_similarities)[:100]
-    print(top_100)
+    # print("")
+    # print(sorted_similarities)
+    top_100 = list(sorted_similarities)[:101]
+
+    # discard the most similar item - this will be the item itself
+    to_return = []
+    for item in top_100:
+        to_return.append([item, sorted_similarities[item]])
+
+    del to_return[0]
+
+    return to_return
 
 
 def cosine_similarity(v,u):
