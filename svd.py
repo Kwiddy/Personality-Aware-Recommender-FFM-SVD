@@ -19,7 +19,7 @@ def create_svd(original_df, ffm_df, user_ID):
     chosen_user_df = users_rating_df.loc[users_rating_df['reviewerID'] == user_ID]
     users_reviewed_items = chosen_user_df['asin'].tolist()
     print("Chosen user: ", user_ID)
-    print("Reviewed items: ", users_reviewed_items)
+    print("Reviewed items: ", len(users_reviewed_items))
 
     print("Creating SVD...")
     # create user-item review score matrix
@@ -122,6 +122,8 @@ def svd_predictions(inp):
     print(inp[0][0])
     print(inp[0][1])
 
+    # numerator:
+    # SUM(multiply user's rating by the similarity score between item being predicted and each item that has been reviewed)
     totals_n = {}
     for item in inp:
         id = item[0]
@@ -131,6 +133,8 @@ def svd_predictions(inp):
                 totals_n[sim[0]] = 0 
             totals_n[sim[0]] += score * sim[1]
         
+    # denominator:
+    # SUM(ABS(each similarity between the item being predicted and each item which has been reviewed))
     totals_d = {}
     for item in inp:
         for sim in item[2]:
