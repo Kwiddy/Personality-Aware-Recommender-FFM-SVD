@@ -90,9 +90,12 @@ def tokenize(text):
 # This function is derived from https://github.com/chbrown/liwc-python
 # THIS IS ONLY LIWC2007, NEEDS TO BE UPDATED IF POSSIBLE
 def calc_liwc(corpus):
-    parse, category_names = liwc.load_token_parser('./LIWC/LIWC2007_English100131.dic')
+    # parse, category_names = liwc.load_token_parser('./LIWC/LIWC2007_English100131.dic')
+    parse, category_names = liwc.load_token_parser('./LIWC/LIWC2015_Dictionary.dic')
     tokens = tokenize(corpus)
     counts = Counter(category for token in tokens for category in parse(token))
+    print(counts)
+    exit()
     return counts
 
 
@@ -214,6 +217,9 @@ def review_APR(df, parent_path):
     # create scores from corpus
     new_path = parent_path + "Movie_and_TV_5_personality.csv"
     if exists(new_path):
+        print("Personality scores already exist...")
         ffm_df = pd.read_csv(new_path)
     else:
         ffm_df = generate_scores(corpora_df, parent_path)
+
+    return ffm_df
