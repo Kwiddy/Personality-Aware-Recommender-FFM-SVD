@@ -51,6 +51,7 @@ def create_svd(original_df, ffm_df, user_ID):
     print("Applying SVD...")
     u, s, vh = svd(matrix, full_matrices=False)
     print(vh.shape)
+    sim_to_items = []
     print("Finding Similarities...")
     for item_id in users_reviewed_items:
         item_location = map_2[item_id]
@@ -67,24 +68,102 @@ def create_svd(original_df, ffm_df, user_ID):
                 highest_similarity = similarity
                 highest_sim_col = col
     
-    # print("Column %d is most similar to column 0" % highest_sim_col)
+        # print("Column %d is most similar to column 0" % highest_sim_col)
 
-    # print(item_scores)
-    # For each item, total its cosine-similarities to each item that the user has reviewed, output the k most similar items
-    sorted_similarities = dict( sorted(item_scores.items(), key=lambda item: item[1], reverse=True))
+        # print(item_scores)
+        # For each item, total its cosine-similarities to each item that the user has reviewed, output the k most similar items
+        # sorted_similarities = dict( sorted(item_scores.items(), key=lambda item: item[1], reverse=True))
 
-    # print("")
-    # print(sorted_similarities)
-    top_100 = list(sorted_similarities)[:101]
+        to_return = []
+        for item in list(item_scores):
+            to_return.append([item, item_scores[item]])
 
-    # discard the most similar item - this will be the item itself
-    to_return = []
-    for item in top_100:
-        to_return.append([item, sorted_similarities[item]])
+        # # print("")
+        # # print(sorted_similarities)
+        # top_100 = list(sorted_similarities)[:101]
 
-    del to_return[0]
+        # to_return = []
+        # for item in top_100:
+        #     to_return.append([item, sorted_similarities[item]])
+
+        # discard the most similar item - this will be the item itself
+        del to_return[0]
+
+        specific_entry = chosen_user_df.loc[chosen_user_df['asin'] == item_id]
+        sim_to_items.append([item_id, specific_entry["overall"], to_return])
+
+    results = svd_predictions(sim_to_items)    
 
     return to_return
+
+
+def svd_predictions(inp):
+    # for each item in inp, 
+    #   item[0] is the reviewed item that everything else is being compared to
+    #   item[1] is the list of all other items and their similarity to that item
+
+    # totals_n = {}
+    # for each item in inp
+    #    score = rating given to item[0]
+    #    for each sim in item[1]:
+    #       if sim[0] not in totals_n then totals_n[sim[0]] == 0
+    #       totals_n[sim[0]] += score * sim[1]
+    #
+    # totals_d = {}
+    # for each item in inp:
+    #   for each sim in item[1]
+    #       if sim[0] not in totals_d then totals_d[sim[0]] == 0
+    #       totals_d[sim[0]] += abs(sim[1])
+
+    # for each item in totals_n, divide by corresponding value in totals_d, output score
+
+    # try and guess the target score for each item
+    print(inp)
+    print(inp[0][0])
+    print(inp[0][1])
+
+    totals_n = {}
+    for item in inp:
+        id = item[0]
+        score = item[1]
+        for sim in item[2]:
+            if sim[0] not in totals_n:
+                totals_n[sim[0]] = 0 
+            totals_n[sim[0]] += score * sim[1]
+        
+    totals_d = {}
+    for item in inp:
+        for sim in item[2]:
+            if sim[0] not in totals_d:
+                totals_d[sim[0]] = 0 
+            totals_d[sim[0]] += abs(sim[1])
+
+    predictions = []
+    for key, value in totals_n.items():
+        n = value.item()
+        d = totals_d[key].item()
+        result = n / d
+        print(n)
+        print(d)
+        print(result)
+        exit()
+        # making the result item[0] so I can sort them easily
+        predictions.append([result, key])
+        # print(n)
+        # print(d)
+        # print(result)
+        # print(predictions)
+        # exit()
+
+    # # sort the predictions
+    sorted_predictions = sorted(predictions, reverse=True)
+    print(sorted_predictions)
+    # print(predictions)
+    # print(type(predictions))
+
+
+
+    exit()
 
 
 def cosine_similarity(v,u):
