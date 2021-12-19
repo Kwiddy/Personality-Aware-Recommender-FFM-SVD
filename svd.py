@@ -238,6 +238,9 @@ def svd_predictions(inp):
     print("maximum: ", sorted_predictions[0:20])
     print("minimum: ", sorted_predictions[-20:])
 
+    # convert to output format
+    results_df = pd.DataFrame.from_records(sorted_predictions)
+
     return sorted_predictions
 
 
