@@ -1,3 +1,4 @@
+import math
 import pandas as pd
 
 def evaluate(results, train, test, user):
@@ -15,9 +16,17 @@ def evaluate(results, train, test, user):
     print()
 
     comparison = user_test_relev.join(results)
-    print(comparison)
+
+    calc_rmse(comparison)
 
     # for each asin in the test split, store the predicted score 
     #   from the results with the actual score [predicted, actual]
 
-    exit()
+
+def calc_rmse(df):
+    rmse_df = df.copy()
+    rmse_df["diff_squared"] = (df["actual"]-df("predictions"))**2
+    
+    rmse = math.sqrt(rmse_df["diff_squared"].mean())
+
+    print("RMSE: ")

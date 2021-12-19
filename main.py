@@ -61,9 +61,6 @@ def main():
         
         evaluate(recommendations_df, train, test, chosen_user)
 
-    # print(recommendations)
-
-
     print("Runtime: ", datetime.now()-start)
 
 
