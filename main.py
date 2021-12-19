@@ -47,14 +47,14 @@ def main():
             if method.upper() == "S":
                 valid_in = True
                 # recommendations = create_svd(full_df, ffm_df, chosen_user)
-                recommendations_df = create_svd(train, chosen_user)
+                recommendations_df = create_svd(full_df, train, chosen_user)
             if method.upper() == "T":
                 valid_in = True
                 # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
-                recommendations_df = create_svd_2(train, chosen_user)
+                recommendations_df = create_svd_2(full_df, train, chosen_user, 0)
 
         
-        evaluate(recommendations_df, train, test)
+        evaluate(recommendations_df, train, test, chosen_user)
 
     # print(recommendations)
 

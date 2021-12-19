@@ -13,11 +13,23 @@ from surprise import NMF, SVD, SVDpp, KNNBasic, KNNWithMeans, KNNWithZScore, CoC
 from surprise.model_selection import cross_validate
 from surprise import Reader, Dataset
 
-def create_svd_2(full_df, chosen_user):
-    print()
+def simple_svd(full_df, train, chosen_user, items_to_predict, data):
+    print()    
+    algo = SVD()
+    algo.fit(data.build_full_trainset())
+    my_recs = []
+    for iid in items_to_predict:
+        my_recs.append((iid, algo.predict(uid=chosen_user,iid=iid).est))
+        
+    res = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
+
+    return res
+
+def create_svd_2(full_df, train, chosen_user, svd_bit):
 
     # reduce
     small_df = full_df[["reviewerID", "asin", "overall"]].copy()
+    small_train = train[["reviewerID", "asin", "overall"]].copy()
 
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(small_df, reader)
@@ -25,21 +37,15 @@ def create_svd_2(full_df, chosen_user):
     # get the list of the movie ids
     unique_ids = small_df['asin'].unique()
     # get the list of the ids that the user has rated
-    iids1001 = small_df.loc[small_df['reviewerID']==chosen_user, 'asin']
+    seen_ids = train.loc[train['reviewerID']==chosen_user, 'asin']
     # remove the rated movies for the recommendations
-    movies_to_predict = np.setdiff1d(unique_ids,iids1001)
+    items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 
-    algo = SVD()
-    algo.fit(data.build_full_trainset())
-    my_recs = []
-    for iid in movies_to_predict:
-        my_recs.append((iid, algo.predict(uid=chosen_user,iid=iid).est))
-        
-    res = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
+    # print(res.head(10))
+    if svd_bit == 0:
+        result = simple_svd(full_df, train, chosen_user, items_to_predict, data)
 
-    print(res.head(10))
-
-    return res
+    return result
 
 # # def create_svd_2(full_df, ffm_df, chosen_user):
 # def create_svd_2(full_df, chosen_user):
