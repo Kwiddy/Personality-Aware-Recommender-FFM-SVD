@@ -32,6 +32,7 @@ def reduceDF(df):
             n = 10
             print("Number of reviewers: ", n)
             frequents = df['reviewerID'].value_counts()[:n].index.tolist()
+            chosen = frequents[0]
             reduced_df = df[df['reviewerID'].isin(frequents)]
 
             valid2 = False
@@ -42,11 +43,11 @@ def reduceDF(df):
                     k = 10
                     print("Reviews per user: ", k)
                     reduced2_df = reduced_df.groupby('reviewerID').head(k).reset_index(drop=True)
-                    return reduced2_df
+                    return reduced2_df, chosen
 
                 elif yn2.upper() == "N":
                     valid2 = True
-                    return reduced_df
+                    return reduced_df, chosen
 
         elif yn.upper() == "N":
             valid = True
