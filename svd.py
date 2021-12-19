@@ -12,7 +12,7 @@ def create_svd(original_df, ffm_df, user_ID):
 
     users_rating_df = original_df[["reviewerID", "asin", "overall"]].copy()
     # anything smaller than this results in a dataet thats too large (somewhere between 2500000 and 3000000 causes the error)
-    users_rating_df = users_rating_df.iloc[:-3000000]
+    # users_rating_df = users_rating_df.iloc[:-3000000]
     # print(user_rating_df)
     print("Reduced dataframe size: ", users_rating_df.size)
 
@@ -94,7 +94,7 @@ def create_svd(original_df, ffm_df, user_ID):
 
     results = svd_predictions(sim_to_items)    
 
-    return to_return
+    return results
 
 
 def svd_predictions(inp):
@@ -218,12 +218,15 @@ def svd_predictions(inp):
     # # sort the predictions
     sorted_predictions = sorted(predictions, reverse=True)
     print(sorted_predictions)
+    print()
+    print()
+    print("maximum: ", sorted_predictions[0:20])
+    print("minimum: ", sorted_predictions[-20:])
     # print(predictions)
     # print(type(predictions))
 
+    return sorted_predictions
 
-
-    exit()
 
 
 def cosine_similarity(v,u):

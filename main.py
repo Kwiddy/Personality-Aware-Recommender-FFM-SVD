@@ -1,6 +1,7 @@
 from reviewAPR import review_APR
-from dataLoader import getDF
+from dataLoader import getDF, reduceDF
 from svd import create_svd
+from svd2 import create_svd_2
 from datetime import date, datetime
 
 # track runtime 
@@ -16,24 +17,33 @@ while new_path[i] != "/":
 parent_path = ''.join(new_path)
 new_path = parent_path + "Movie_and_TV_5.csv"
 
-full_df= getDF(file_path, parent_path)
+retrieved_df= getDF(file_path, parent_path)
+
+full_df = reduceDF(retrieved_df)
 
 # FOR EACH ROW IN DATA, INPUT ONLY THE USER_ID AND THE REVIEW
 ffm_df = review_APR(full_df, parent_path)
 
-chosen_user = "A2M1CU2IRZG0K9"
+# take the most common user as example
+modes = full_df.mode()
+chosen_user = modes["reviewerID"][0]
 
 # choose method
 print("")
 print("Methods:")
-print("[S] - SVD")
+print("[S] - cheat SVD")
+print("[T] - true SVD")
 valid_in = False
 while not valid_in:
     method = input("Please choose a method above: ")
     if method.upper() == "S":
         valid_in = True
-        create_svd(full_df, ffm_df, chosen_user)
+        recommendations = create_svd(full_df, ffm_df, chosen_user)
+    if method.upper() == "T":
+        valid_in = True
+        recommendations = create_svd_2(full_df, ffm_df, chosen_user)
 
+# print(recommendations)
 
 
 print("Runtime: ", datetime.now()-start)
