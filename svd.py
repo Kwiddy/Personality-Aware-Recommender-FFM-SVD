@@ -5,7 +5,8 @@ from numpy.linalg import svd
 import numpy as np
 import operator
 
-def create_svd(original_df, ffm_df, user_ID):
+# def create_svd(original_df, ffm_df, user_ID):
+def create_svd(original_df, user_ID):
 
     # THIS RESULTED IN AN INDEXERROR WHEN OPERATING ON THE WHOLE DATASET, THIS IS CURRENTLY AN OPEN ERROR AND REQUIRES A SMALLER DATASET
     # print(original_df)
@@ -217,13 +218,25 @@ def svd_predictions(inp):
 
     # # sort the predictions
     sorted_predictions = sorted(predictions, reverse=True)
-    print(sorted_predictions)
+    # print(sorted_predictions)
+    # print()
+    # print()
+    # print("maximum: ", sorted_predictions[0:20])
+    # print("minimum: ", sorted_predictions[-20:])
+    # print(predictions)
+    # print(type(predictions))
+
+    # currently the prediction scores will be between +- 5, need
+    #       to make it between +- 2.5 and then shift it to between 0-5
+
+    print("Fixing scaling...")
+    for item in sorted_predictions:
+        item[0] = (item[0]/2) + 2.5
+
     print()
     print()
     print("maximum: ", sorted_predictions[0:20])
     print("minimum: ", sorted_predictions[-20:])
-    # print(predictions)
-    # print(type(predictions))
 
     return sorted_predictions
 
