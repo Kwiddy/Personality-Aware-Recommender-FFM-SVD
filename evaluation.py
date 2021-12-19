@@ -28,5 +28,6 @@ def calc_rmse(df):
     rmse_df["diff_squared"] = (df["actual"]-df("predictions"))**2
     
     rmse = math.sqrt(rmse_df["diff_squared"].mean())
-
-    print("RMSE: ")
+    
+    print()
+    print("RMSE: ", rmse)
