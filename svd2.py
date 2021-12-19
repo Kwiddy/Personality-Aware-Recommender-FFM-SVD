@@ -13,18 +13,6 @@ from surprise import NMF, SVD, SVDpp, KNNBasic, KNNWithMeans, KNNWithZScore, CoC
 from surprise.model_selection import cross_validate
 from surprise import Reader, Dataset
 
-def simple_svd(full_df, train, chosen_user, items_to_predict, data):
-    print()    
-    algo = SVD()
-    algo.fit(data.build_full_trainset())
-    my_recs = []
-    for iid in items_to_predict:
-        my_recs.append((iid, algo.predict(uid=chosen_user,iid=iid).est))
-        
-    res = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
-
-    return res
-
 def create_svd_2(full_df, train, chosen_user, svd_bit):
 
     # reduce
@@ -43,7 +31,18 @@ def create_svd_2(full_df, train, chosen_user, svd_bit):
 
     # print(res.head(10))
     if svd_bit == 0:
-        result = simple_svd(full_df, train, chosen_user, items_to_predict, data)
+        algo = SVD()
+    elif svd_bit == 1:
+        algo = SVDpp()
+
+    print()    
+    algo.fit(data.build_full_trainset())
+    my_recs = []
+    for iid in items_to_predict:
+        my_recs.append((iid, algo.predict(uid=chosen_user,iid=iid).est))
+        
+    result = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
+
 
     return result
 

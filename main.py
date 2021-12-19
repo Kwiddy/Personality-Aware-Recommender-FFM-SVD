@@ -41,6 +41,7 @@ def main():
         print("Methods:")
         print("[S] - cheat SVD")
         print("[T] - true SVD")
+        print("[P] - true SVDpp")
         valid_in = False
         while not valid_in:
             method = input("Please choose a method above: ")
@@ -52,6 +53,10 @@ def main():
                 valid_in = True
                 # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
                 recommendations_df = create_svd_2(full_df, train, chosen_user, 0)
+            if method.upper() == "P":
+                valid_in = True
+                # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
+                recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
 
         
         evaluate(recommendations_df, train, test, chosen_user)
