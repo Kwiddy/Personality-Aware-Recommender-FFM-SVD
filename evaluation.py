@@ -12,13 +12,7 @@ def evaluate(results, train, test, user):
     user_test_relev = user_test_relev.set_index('asin')
     results = results.set_index('asin')
 
-    print(user_test_relev)
-    print("Test^^^^^")
-
     print()
-
-    print(results)
-    print("Predicted^^^^^")
 
     comparison = user_test_relev.join(results)
     print(comparison)
