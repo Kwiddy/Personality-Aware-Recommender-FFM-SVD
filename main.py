@@ -3,6 +3,7 @@ from dataLoader import getDF, reduceDF
 from svd import create_svd
 from svd2 import create_svd_2
 from datetime import date, datetime
+from evaluation import evaluate
 
 # track runtime 
 start = datetime.now()
@@ -41,11 +42,14 @@ else:
         if method.upper() == "S":
             valid_in = True
             # recommendations = create_svd(full_df, ffm_df, chosen_user)
-            recommendations = create_svd(full_df, chosen_user)
+            recommendations_df = create_svd(full_df, chosen_user)
         if method.upper() == "T":
             valid_in = True
             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
-            recommendations = create_svd_2(full_df, chosen_user)
+            recommendations_df = create_svd_2(full_df, chosen_user)
+
+    
+    evaluate(recommendations_df)
 
 # print(recommendations)
 

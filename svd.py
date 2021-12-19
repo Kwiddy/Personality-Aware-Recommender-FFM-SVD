@@ -240,8 +240,18 @@ def svd_predictions(inp):
 
     # convert to output format
     results_df = pd.DataFrame.from_records(sorted_predictions)
+    print(list(results_df.columns))
+    results_df = results_df.rename(columns={0: "predictions", 1: "asin"})
+    print(list(results_df.columns))
 
-    return sorted_predictions
+    # rearrange columns
+    cols = results_df.columns.tolist()
+    cols = cols[-1:] + cols[:-1]
+    results_df = results_df[cols]
+
+    print(results_df.head(10))
+
+    return results_df
 
 
 

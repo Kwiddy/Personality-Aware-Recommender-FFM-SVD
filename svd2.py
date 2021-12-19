@@ -15,7 +15,7 @@ from surprise import Reader, Dataset
 
 def create_svd_2(full_df, chosen_user):
     print()
-    
+
     # reduce
     small_df = full_df[["reviewerID", "asin", "overall"]].copy()
 
@@ -35,9 +35,11 @@ def create_svd_2(full_df, chosen_user):
     for iid in movies_to_predict:
         my_recs.append((iid, algo.predict(uid=chosen_user,iid=iid).est))
         
-    res = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False).head(10)
+    res = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
 
-    print(res)
+    print(res.head(10))
+
+    return res
 
 # # def create_svd_2(full_df, ffm_df, chosen_user):
 # def create_svd_2(full_df, chosen_user):
