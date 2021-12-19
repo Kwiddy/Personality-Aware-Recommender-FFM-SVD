@@ -118,10 +118,12 @@ def svd_predictions(inp):
     # for each item in totals_n, divide by corresponding value in totals_d, output score
 
     # try and guess the target score for each item
-    print(inp)
+    print(inp[0][2][:50])
+    # print(sorted(inp))
     print(inp[0][0])
     print(inp[0][1])
 
+    print("Finding numerators...")
     # numerator:
     # SUM(multiply user's rating by the similarity score between item being predicted and each item that has been reviewed)
     totals_n = {}
@@ -129,29 +131,83 @@ def svd_predictions(inp):
         id = item[0]
         score = item[1]
         for sim in item[2]:
-            if sim[0] not in totals_n:
-                totals_n[sim[0]] = 0 
-            totals_n[sim[0]] += score * sim[1]
+            k = sim[0]
+            v = sim[1]
+            if k not in totals_n:
+                totals_n[k] = 0 
+            temp = score * v
+            # print("temp: ", temp)
+            # print(type(temp))
+            try:
+                temp = temp.tolist()
+                # print(type(temp))
+                # print("temp: ", temp)
+                # print("a2")
+            except:
+                print()
+            # temp_val = temp.item()
+            temp_val = temp[0]
+            # print("VVV")
+            # print("temp: ", temp_val)
+            # print(type(temp_val))
+            totals_n[k] += float(temp_val)
+            # print("----")
+            # print(score)
+            # print(type(score))
+            # print(v)
+            # print(type(v))
+            # print(totals_n[k])
+            # print(type(totals_n[k]))
+            # temp = score * v
+            # print(temp)
+            # print(type(temp))
+            # try:
+            #     print("0")
+            #     print(temp.item())
+            # except:
+            #     print("")
+            # try:
+            #     print("1")
+            #     print(temp[0])
+            #     print(temp[1])
+            # except:
+            #     exit()
+            # exit()
+    print(totals_n)
+    # yn = input("continue? ")
         
+    print("Finding denominators...")
     # denominator:
     # SUM(ABS(each similarity between the item being predicted and each item which has been reviewed))
     totals_d = {}
     for item in inp:
         for sim in item[2]:
-            if sim[0] not in totals_d:
-                totals_d[sim[0]] = 0 
-            totals_d[sim[0]] += abs(sim[1])
+            k = sim[0]
+            v = sim[1]
+            if k not in totals_d:
+                totals_d[k] = 0 
+            totals_d[k] += abs(v)
 
     predictions = []
     for key, value in totals_n.items():
-        n = value.item()
-        d = totals_d[key].item()
+        n = value# .item() # nan
+        d = totals_d[key]# .item()
         result = n / d
-        print(n)
-        print(d)
-        print(result)
-        exit()
-        # making the result item[0] so I can sort them easily
+        # print(n)
+        # print(d)
+        # print(result)
+        # yn = input("show numerators: ")
+        # print(totals_n)
+        # print(totals_n["6304584598"])
+        # print(type(totals_n["6304584598"]))
+        # try:
+            # print(totals_n["6304584598"][0])
+            # print(totals_n["6304584598"][1])
+        # except Exception as e:
+            # print(e)
+        # print(totals_n["6304584598"])#.item())
+        # exit()
+        # # making the result item[0] so I can sort them easily
         predictions.append([result, key])
         # print(n)
         # print(d)
