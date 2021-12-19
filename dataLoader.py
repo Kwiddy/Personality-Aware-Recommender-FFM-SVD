@@ -29,7 +29,7 @@ def reduceDF(df):
             valid = True
 
             # get n most common reviewers
-            n = 10
+            n = 100
             print("Number of reviewers: ", n)
             frequents = df['reviewerID'].value_counts()[:n].index.tolist()
             chosen = frequents[0]
@@ -40,7 +40,7 @@ def reduceDF(df):
                 yn2 = input("Restrict number of reviews per user? [Y/N]: ")
                 if yn2.upper() == "Y":
                     valid2 = True
-                    k = 10
+                    k = 50
                     print("Reviews per user: ", k)
                     reduced2_df = reduced_df.groupby('reviewerID').head(k).reset_index(drop=True)
                     return reduced2_df, chosen

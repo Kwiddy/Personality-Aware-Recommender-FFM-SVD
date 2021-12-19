@@ -30,6 +30,12 @@ def main():
     # take a test split for the chosen_user 
     train, test = train_test_split(full_df, chosen_user)
 
+    select_method(full_df, train, test, chosen_user)
+
+    print("Runtime: ", datetime.now()-start)
+
+
+def select_method(full_df, train, test, chosen_user):
     yn = input("Include personality? [Y/N]: ")
     if yn.upper() == "Y":
         valid = True
@@ -40,8 +46,8 @@ def main():
         print("")
         print("Methods:")
         print("[S] - cheat SVD")
-        print("[T] - true SVD")
-        print("[P] - true SVDpp")
+        print("[T] - SVD")
+        print("[P] - SVD++")
         valid_in = False
         while not valid_in:
             method = input("Please choose a method above: ")
@@ -59,31 +65,15 @@ def main():
                 recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
 
         
-        evaluate(recommendations_df, train, test, chosen_user)
+        print(recommendations_df.head(10))
+    
+    evaluate(recommendations_df, train, test, chosen_user)
 
-    print("Runtime: ", datetime.now()-start)
-
+    go_again(full_df, train, test, chosen_user)
 
 def train_test_split(df, user):
 
     users = df["reviewerID"].unique()
-
-    # user_df = df.loc[df['reviewerID'] == users[0]]
-    # rows, columns = user_df.shape
-
-    # split = 0.2
-    # splitter = int(rows * split)
-
-    # print("Splitter: ", splitter)
-
-    # test = user_df.iloc[splitter:]
-
-    # # remove all of the test items 
-    # train = user_df.iloc[:splitter]
-
-    # print(train)
-    # print()
-    # print(test)
 
     parts_train = []
     parts_test = []
@@ -95,12 +85,9 @@ def train_test_split(df, user):
         split = 0.2
         splitter = int(rows * split)
 
-        # print("Splitter: ", splitter)
-
         test = user_df.iloc[splitter:]
         parts_test.append(test)
 
-        # remove all of the test items 
         train = user_df.iloc[:splitter]
         parts_train.append(train)
 
@@ -109,5 +96,17 @@ def train_test_split(df, user):
     res_test = pd.concat(parts_test)
 
     return res_train, res_test
+
+
+def go_again(full_df, train, test, chosen_user):
+    valid = False
+    while not valid:
+        yn = input("Select a different method? [Y/N]: ")
+        if yn.upper() == "Y":
+            valid = True
+            print()
+            select_method(full_df, train, test, chosen_user)
+        elif yn.upper() == "N":
+            valid = True
 
 main()
