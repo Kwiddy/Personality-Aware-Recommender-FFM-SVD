@@ -29,5 +29,6 @@ def calc_rmse(df):
     
     rmse = math.sqrt(rmse_df["diff_squared"].mean())
 
+    print(rmse_df)
     print()
     print("RMSE: ", rmse)

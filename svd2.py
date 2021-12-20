@@ -1,8 +1,7 @@
 # Taken and adjusted from
-# https://towardsdatascience.com/beginners-guide-to-creating-an-svd-recommender-system-1fd7326d1f65
-
-# and 
 # https://predictivehacks.com/how-to-run-recommender-systems-in-python/ 
+# and
+# https://towardsdatascience.com/beginners-guide-to-creating-an-svd-recommender-system-1fd7326d1f65
 
 import pandas as pd
 import numpy as np

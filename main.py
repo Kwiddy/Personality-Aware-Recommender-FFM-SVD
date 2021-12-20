@@ -38,34 +38,33 @@ def main():
 def select_method(full_df, train, test, chosen_user):
     yn = input("Include personality? [Y/N]: ")
     if yn.upper() == "Y":
-        valid = True
+        print("Using Personality....")
         ########
-    else:
         
-        # choose method
-        print("")
-        print("Methods:")
-        print("[S] - cheat SVD")
-        print("[T] - SVD")
-        print("[P] - SVD++")
-        valid_in = False
-        while not valid_in:
-            method = input("Please choose a method above: ")
-            if method.upper() == "S":
-                valid_in = True
-                # recommendations = create_svd(full_df, ffm_df, chosen_user)
-                recommendations_df = create_svd(full_df, train, chosen_user)
-            if method.upper() == "T":
-                valid_in = True
-                # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
-                recommendations_df = create_svd_2(full_df, train, chosen_user, 0)
-            if method.upper() == "P":
-                valid_in = True
-                # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
-                recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
+    # choose method
+    print("")
+    print("Methods:")
+    print("[S] - cheat SVD")
+    print("[T] - SVD")
+    print("[P] - SVD++")
+    valid_in = False
+    while not valid_in:
+        method = input("Please choose a method above: ")
+        if method.upper() == "S":
+            valid_in = True
+            # recommendations = create_svd(full_df, ffm_df, chosen_user)
+            recommendations_df = create_svd(full_df, train, chosen_user)
+        if method.upper() == "T":
+            valid_in = True
+            # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
+            recommendations_df = create_svd_2(full_df, train, chosen_user, 0)
+        if method.upper() == "P":
+            valid_in = True
+            # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
+            recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
 
         
-        print(recommendations_df.head(10))
+    print(recommendations_df.head(10))
     
     evaluate(recommendations_df, train, test, chosen_user)
 
