@@ -6,21 +6,14 @@ from datetime import date, datetime
 from evaluation import evaluate
 import pandas as pd
 
+
 def main():
     # track runtime 
     start = datetime.now()
 
-    # ADD LOADING THE DATA INTO A PANDAS DATAFRAME
-    file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movies_and_TV_5.json.gz'
+    file_path, parent_path = choose_data()
 
-    new_path = [char for char in file_path]
-    i = -1
-    while new_path[i] != "/":
-        del new_path[i]
-    parent_path = ''.join(new_path)
-    new_path = parent_path + "Movie_and_TV_5.csv"
-
-    retrieved_df= getDF(file_path, parent_path)
+    retrieved_df = getDF(file_path, parent_path)
 
     full_df, chosen_user = reduceDF(retrieved_df)
 
@@ -33,6 +26,27 @@ def main():
     select_method(full_df, train, test, chosen_user)
 
     print("Runtime: ", datetime.now()-start)
+
+
+def choose_data():
+
+    v_choice = False
+    print("[M] - Movies and TV")
+    while not v_choice:
+        choice = input("Please enter one of the datasets above: ")
+        if choice.upper() == "M":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movies_and_TV_5.json.gz'
+            extension = "Movie_and_TV_5.csv"
+            v_choice = True
+
+    new_path = [char for char in file_path]
+    i = -1
+    while new_path[i] != "/":
+        del new_path[i]
+    parent_path = ''.join(new_path)
+    new_path = parent_path + extension
+
+    return file_path, parent_path
 
 
 def select_method(full_df, train, test, chosen_user):
@@ -63,12 +77,12 @@ def select_method(full_df, train, test, chosen_user):
             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
             recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
 
-        
     print(recommendations_df.head(10))
     
     evaluate(recommendations_df, train, test, chosen_user)
 
     go_again(full_df, train, test, chosen_user)
+
 
 def train_test_split(df, user):
 
