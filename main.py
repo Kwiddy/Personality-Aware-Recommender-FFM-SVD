@@ -11,14 +11,14 @@ def main():
     # track runtime 
     start = datetime.now()
 
-    file_path, parent_path = choose_data()
+    file_path, parent_path, ext = choose_data()
 
-    retrieved_df = getDF(file_path, parent_path)
+    retrieved_df = getDF(file_path, parent_path, ext)
 
     full_df, chosen_user = reduceDF(retrieved_df)
 
     # FOR EACH ROW IN DATA, INPUT ONLY THE USER_ID AND THE REVIEW
-    # ffm_df = review_APR(full_df, parent_path)
+    ffm_df = review_APR(full_df, parent_path, ext)
 
     # take a test split for the chosen_user 
     train, test = train_test_split(full_df, chosen_user)
@@ -32,11 +32,26 @@ def choose_data():
 
     v_choice = False
     print("[M] - Movies and TV")
+    print("[D] - Digital Music")
+    print("[K] - Kindle Store")
+    print("[V] - Video Games")
     while not v_choice:
         choice = input("Please enter one of the datasets above: ")
         if choice.upper() == "M":
             file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movies_and_TV_5.json.gz'
             extension = "Movie_and_TV_5.csv"
+            v_choice = True
+        elif choice.upper() == "D":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Digital_Music_5.json.gz'
+            extension = "Digital_Music_5.csv"
+            v_choice = True
+        elif choice.upper() == "K":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5.json.gz'
+            extension = "Kindle_Store_5.csv"
+            v_choice = True
+        elif choice.upper() == "V":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Video_Games_5.json.gz'
+            extension = "Video_Games_5.csv"
             v_choice = True
 
     new_path = [char for char in file_path]
@@ -46,7 +61,7 @@ def choose_data():
     parent_path = ''.join(new_path)
     new_path = parent_path + extension
 
-    return file_path, parent_path
+    return file_path, parent_path, extension
 
 
 def select_method(full_df, train, test, chosen_user):
@@ -104,7 +119,6 @@ def train_test_split(df, user):
         train = user_df.iloc[:splitter]
         parts_train.append(train)
 
-
     res_train = pd.concat(parts_train)
     res_test = pd.concat(parts_test)
 
@@ -121,5 +135,15 @@ def go_again(full_df, train, test, chosen_user):
             select_method(full_df, train, test, chosen_user)
         elif yn.upper() == "N":
             valid = True
+
+    valid2 = False
+    while not valid2:
+        yn = input("Choose different dataset? [Y/N]: ")
+        if yn.upper() == "Y":
+            valid2 = True
+            print()
+            main()
+        elif yn.upper() == "N":
+            valid2 = True
 
 main()

@@ -4,8 +4,8 @@ import json
 from os.path import exists
 
 
-def getDF(path, parent_path):
-    new_path = parent_path + "Movie_and_TV_5.csv"
+def getDF(path, parent_path, extension):
+    new_path = parent_path + extension
 
     if exists(new_path):
         print("Full dataframe already exists...")
@@ -20,6 +20,7 @@ def getDF(path, parent_path):
         df.to_csv(new_path)
 
     return df
+
 
 def reduceDF(df):
     valid = False

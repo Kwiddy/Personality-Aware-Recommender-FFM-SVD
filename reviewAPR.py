@@ -94,8 +94,6 @@ def calc_liwc(corpus):
     parse, category_names = liwc.load_token_parser('./LIWC/LIWC2015_Dictionary.dic')
     tokens = tokenize(corpus)
     counts = Counter(category for token in tokens for category in parse(token))
-    print(counts)
-    exit()
     return counts
 
 
@@ -131,8 +129,9 @@ def convert_to_ffm(liwc):
     # print(final_ffm_scores[0])
     return final_ffm_scores[0]
 
+
 # Create scores for each user
-def generate_scores(df, parent_path):
+def generate_scores(df, parent_path, ext):
 
     # Get all unique user IDs
     ID_list = df['reviewerID'].tolist()
@@ -156,15 +155,15 @@ def generate_scores(df, parent_path):
         data.append([reviewerID, ffm_scores[0], ffm_scores[1], ffm_scores[2], ffm_scores[3], ffm_scores[4]])
     
     ffm_df = pd.DataFrame(data, columns=['reviewerID', 'Extroversion', "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"])
-    new_path = parent_path + "Movie_and_TV_5_personality.csv"
+    new_path = parent_path + ext + "_personality.csv" #"Movie_and_TV_5_personality.csv"
     ffm_df.to_csv(new_path)
 
     return ffm_df
 
 
 # combine user reviews
-def create_corpora(df, parent_path):
-    new_path = parent_path + "Movie_and_TV_5_reviews.csv"
+def create_corpora(df, parent_path, ext):
+    new_path = parent_path + ext + "_reviews.csv"# "Movie_and_TV_5_reviews.csv"
 
     print("Creating reviews dataframe...")
     if exists(new_path):
@@ -175,8 +174,8 @@ def create_corpora(df, parent_path):
         reviews_df.to_csv(new_path)
         
     # create corpora df
-    new_path = parent_path + "Movie_and_TV_5_corpora.csv"
-    print("Creating corpus dataframe")
+    new_path = parent_path + ext + "_corpora.csv" #+ "Movie_and_TV_5_corpora.csv"
+    print("Creating corpus dataframe...")
     if exists(new_path):
         corpora_df = pd.read_csv(new_path)
     else:
@@ -210,16 +209,19 @@ def create_corpora(df, parent_path):
     return corpora_df
 
 
-def review_APR(df, parent_path):
+def review_APR(df, parent_path, extension):
+    # "Digital_Music_5.csv"
+    sub_extension = extension[:-4]
+
     # create corpus for user
-    corpora_df = create_corpora(df, parent_path)
+    corpora_df = create_corpora(df, parent_path, sub_extension)
 
     # create scores from corpus
-    new_path = parent_path + "Movie_and_TV_5_personality.csv"
+    new_path = parent_path + sub_extension + "_personality.csv"# + "Movie_and_TV_5_personality.csv"
     if exists(new_path):
         print("Personality scores already exist...")
         ffm_df = pd.read_csv(new_path)
     else:
-        ffm_df = generate_scores(corpora_df, parent_path)
+        ffm_df = generate_scores(corpora_df, parent_path, sub_extension)
 
     return ffm_df
