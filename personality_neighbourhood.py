@@ -1,6 +1,7 @@
 from dataLoader import getDF, reduceDF
 import pandas as pd
 
+
 # function to find the users with the most similar personalities to a target user
 def find_neighbours(id):
     personalities_df = pd.read_csv("./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movie_and_TV_5_personality.csv")
