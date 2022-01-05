@@ -25,9 +25,9 @@ def evaluate(results, train, test, user):
 
 def calc_rmse(df):
     rmse_df = df.copy()
-    rmse_df["diff_squared"] = (df["actual"]-df["predictions"])**2
+    rmse_df["RMSE"] = (df["actual"]-df["predictions"])**2
     
-    rmse = math.sqrt(rmse_df["diff_squared"].mean())
+    rmse = math.sqrt(rmse_df["RMSE"].mean())
 
     print(rmse_df)
     print()
