@@ -94,6 +94,10 @@ def calc_liwc(corpus):
     parse, category_names = liwc.load_token_parser('./LIWC/LIWC2015_Dictionary.dic')
     tokens = tokenize(corpus)
     counts = Counter(category for token in tokens for category in parse(token))
+
+    # print(counts)
+    # exit()
+
     return counts
 
 
@@ -123,8 +127,8 @@ def convert_to_ffm(liwc):
     # print(norm_ffm_scores)
     final_ffm_scores = norm_ffm_scores.tolist()
 
+
     # need to have normalized scores because different users will have different amounts of data
-    #   
 
     # print(final_ffm_scores[0])
     return final_ffm_scores[0]
@@ -155,6 +159,17 @@ def generate_scores(df, parent_path, ext):
         data.append([reviewerID, ffm_scores[0], ffm_scores[1], ffm_scores[2], ffm_scores[3], ffm_scores[4]])
     
     ffm_df = pd.DataFrame(data, columns=['reviewerID', 'Extroversion', "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"])
+
+    print(ffm_df)
+
+    # currently, the values are normalised between some -ve and +ve, e.g. for openness: -0.308 to 0.359
+    #   solution: add abs(minimum value) to all values, so -0.308 -> 0 and 0.35->0.667
+    #   do 1/max (1/0.658) and then multiply all values by this to get all scores in range of 0-1 spread properly
+    columns = list(ffm_df)[1:]
+    for col in columns:
+        ffm_df[col] += abs(ffm_df[col].min())
+        ffm_df[col] *= 1 / ffm_df[col].max()
+
     new_path = parent_path + ext + "_personality.csv" #"Movie_and_TV_5_personality.csv"
     ffm_df.to_csv(new_path)
 
@@ -217,11 +232,12 @@ def review_APR(df, parent_path, extension):
     corpora_df = create_corpora(df, parent_path, sub_extension)
 
     # create scores from corpus
-    new_path = parent_path + sub_extension + "_personality.csv"# + "Movie_and_TV_5_personality.csv"
-    if exists(new_path):
-        print("Personality scores already exist...")
-        ffm_df = pd.read_csv(new_path)
-    else:
-        ffm_df = generate_scores(corpora_df, parent_path, sub_extension)
+    # new_path = parent_path + sub_extension + "_personality.csv"# + "Movie_and_TV_5_personality.csv"
+    # if exists(new_path):
+    #     print("Personality scores already exist...")
+    #     ffm_df = pd.read_csv(new_path)
+    # else:
+    #     ffm_df = generate_scores(corpora_df, parent_path, sub_extension)
+    ffm_df = generate_scores(corpora_df, parent_path, sub_extension)
 
     return ffm_df
