@@ -2,6 +2,7 @@ import pandas as pd
 import gzip
 import json
 from os.path import exists
+from personality_neighbourhood import get_neighbourhood
 
 
 def getDF(path, parent_path, extension):
@@ -22,19 +23,34 @@ def getDF(path, parent_path, extension):
     return df
 
 
-def reduceDF(df):
+def reduceDF(df, df_code):
     valid = False
     while not valid:
-        yn = input("Limit number of users? [Y/N]: ")
+        yn = input("Limit number of users? [Y/N] (Recommended): ")
         if yn.upper() == "Y":
             valid = True
+            valid3 = False
+            while not valid3:
+                yn3 = input("Limit by personality or absolute value (100)? [P/A]: ")
+                if yn3.upper() == "A":
+                    valid3 = True
+                    # get n most common reviewers
+                    n = 100
+                    print("Number of reviewers: ", n)
+                    frequents = df['reviewerID'].value_counts()[:n].index.tolist()
+                    chosen = frequents[0]
+                    reduced_df = df[df['reviewerID'].isin(frequents)]
+                elif yn3.upper() == "P":
+                    valid3 = True
+                    print("Reducing by personality...")
+                    frequents = df['reviewerID'].value_counts().index.tolist()
+                    chosen = frequents[0]
+                    neighbours_df = get_neighbourhood(chosen, df_code)
+                    neighbours = neighbours_df["reviewerID"].unique()
+                    reduced_df = df[df['reviewerID'].isin(neighbours)]
 
-            # get n most common reviewers
-            n = 100
-            print("Number of reviewers: ", n)
-            frequents = df['reviewerID'].value_counts()[:n].index.tolist()
-            chosen = frequents[0]
-            reduced_df = df[df['reviewerID'].isin(frequents)]
+                else:
+                    print("Invalid input, please enter a 'P' or an 'A'")
 
             valid2 = False
             while not valid2:
@@ -52,4 +68,7 @@ def reduceDF(df):
 
         elif yn.upper() == "N":
             valid = True
-            return df
+            print(df)
+            frequents = df['reviewerID'].value_counts().index.tolist()
+            chosen = frequents[0]
+            return df, chosen

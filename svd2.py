@@ -12,7 +12,10 @@ from surprise import NMF, SVD, SVDpp, KNNBasic, KNNWithMeans, KNNWithZScore, CoC
 from surprise.model_selection import cross_validate
 from surprise import Reader, Dataset
 
+
 def create_svd_2(full_df, train, chosen_user, svd_bit):
+
+    # print(full_df)
 
     # reduce
     small_df = full_df[["reviewerID", "asin", "overall"]].copy()
