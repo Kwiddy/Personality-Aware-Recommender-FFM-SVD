@@ -27,7 +27,7 @@ def create_svd_2(full_df, train, chosen_user, svd_bit):
     # get the list of the movie ids
     unique_ids = small_df['asin'].unique()
     # get the list of the ids that the user has rated
-    seen_ids = train.loc[train['reviewerID']==chosen_user, 'asin']
+    seen_ids = train.loc[train['reviewerID'] == chosen_user, 'asin']
     # remove the rated movies for the recommendations
     items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 

@@ -2,15 +2,13 @@ from reviewAPR import review_APR
 from dataLoader import getDF, reduceDF
 from svd import create_svd
 from svd2 import create_svd_2
+from lgbmRegressor import create_lightgbm
 from datetime import date, datetime
 from evaluation import evaluate
 import pandas as pd
 
 
 def main():
-    # track runtime 
-    start = datetime.now()
-
     file_path, parent_path, ext, df_code = choose_data()
 
     retrieved_df = getDF(file_path, parent_path, ext)
@@ -19,16 +17,12 @@ def main():
 
     print("Chosen user: ", chosen_user)
 
-    # FOR EACH ROW IN DATA, INPUT ONLY THE USER_ID AND THE REVIEW
     # ffm_df = review_APR(full_df, parent_path, ext)
 
     # take a test split for the chosen_user 
     train, test = train_test_split(full_df, chosen_user)
 
     select_method(full_df, train, test, chosen_user)
-
-    print("Runtime: ", datetime.now()-start)
-
 
 def choose_data():
     v_choice = False
@@ -70,13 +64,22 @@ def choose_data():
 
 
 def select_method(full_df, train, test, chosen_user):
+
+    # take equal amounts of each rating
+    print("Rating distribution: ", dict(full_df["overall"].value_counts()))
+
+    # make an equal number of each case
+    equal = full_df.groupby('overall').head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
+
+    print("Rating distribution: ", dict(equal["overall"].value_counts()))
+
     valid = False
     while not valid:
         yn = input("Include personality in model? [Y/N]: ")
         if yn.upper() == "Y":
             print("Using Personality....")
             valid = True
-            ########
+            recommendations_df = create_lightgbm(equal, train, chosen_user)
         elif yn.upper() == "N":
             valid = True
             # choose method
@@ -103,6 +106,7 @@ def select_method(full_df, train, test, chosen_user):
         else:
             print("Invalid input, please enter a 'Y' or an 'N'")
 
+    print("Most recommended")
     print(recommendations_df.head(10))
     
     evaluate(recommendations_df, train, test, chosen_user)
@@ -157,5 +161,7 @@ def go_again(full_df, train, test, chosen_user):
         elif yn.upper() == "N":
             valid2 = True
 
-
+# track runtime
+start = datetime.now()
 main()
+print("Runtime: ", datetime.now()-start)
