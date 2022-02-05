@@ -1,6 +1,9 @@
 import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import imageio
+import numpy as np
+import os
 
 def exploratory_analysis(df):
     personalities = pd.read_csv(
@@ -72,6 +75,8 @@ def exploratory_analysis(df):
         plt.savefig(save_name)
         plt.clf()
 
+    plt.close()
+
     # normalized importance
     for k, v in totals.items():
         temp_dict = v
@@ -81,13 +86,58 @@ def exploratory_analysis(df):
             temp_dict[k2] = (v2-minval)/(maxval-minval)
         totals[k] = temp_dict
 
+    # p0.11
+    filenames = []
     for k, v in totals.items():
         plt.bar(v.keys(), v.values())
         plt.title("Normalized Traits Appearances in Ratings of " + str(k))
-        plt.show()
         save_name = "analysis_results/NormalizedTraitScoreCorrelation_" + str(k) + ".png"
+        filenames.append(save_name)
         plt.savefig(save_name)
         plt.clf()
+
+    with imageio.get_writer('analysis_results/NormalizedTraitScoreCorrelations.gif', mode='I') as writer:
+        for filename in filenames:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+
+    #################################
+    labels = ["1", "2", "3", "4", "5"]
+    ext_scores = []
+    agr_scores = []
+    con_scores = []
+    nue_scores = []
+    ote_scores = []
+    for k, v in totals.items():
+        for k2, v2 in v.items():
+            if k2 == "Ext.":
+                ext_scores.append(v2)
+            if k2 == "Agr.":
+                agr_scores.append(v2)
+            if k2 == "Con.":
+                con_scores.append(v2)
+            if k2 == "Neu.":
+                nue_scores.append(v2)
+            if k2 == "Ote.":
+                ote_scores.append(v2)
+
+    X_axis = np.arange(5)
+
+    plt.bar(X_axis - 0.4, ext_scores, 0.15, label='Extroversion')
+    plt.bar(X_axis - 0.2, agr_scores, 0.15, label='Agreeableness')
+    plt.bar(X_axis, con_scores, 0.15, label='Conscientiousness')
+    plt.bar(X_axis + 0.2, nue_scores, 0.15, label='Neurotisicm')
+    plt.bar(X_axis + 0.4, ote_scores, 0.15, label='Openness to Experience')
+
+    plt.xticks(X_axis, labels)
+    plt.xlabel("Rating")
+    plt.ylabel("Prominence")
+    plt.title("Prominence of Personality Traits in Ratings Distribution")
+    plt.legend()
+    plt.show()
+    plt.savefig("analysis_results/NormalizedTraitScoreCorrelations.png")
+    #################################
+
 
 def normalize(value, min, max):
     return (value-min) / (max-min)
