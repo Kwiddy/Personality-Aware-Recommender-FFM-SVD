@@ -46,7 +46,6 @@ def reduceDF(df, df_code):
                 elif yn3.upper() == "P":
                     valid3 = True
                     print("Reducing by personality...")
-                    frequents = df['reviewerID'].value_counts().index.tolist()
                     chosen = find_chosen(df)
                     neighbours_df = get_neighbourhood(chosen, df_code)
                     neighbours = neighbours_df["reviewerID"].unique()
@@ -64,12 +63,14 @@ def reduceDF(df, df_code):
                     print("Reviews per user: ", k)
                     reduced2_df = reduced_df.groupby('reviewerID').head(k).reset_index(drop=True)
                     reduced2_df.to_csv("reduced.csv")
+                    print("total reviews: ", reduced2_df[reduced2_df.columns[0]].count())
                     chosen = find_chosen(reduced2_df)
                     return reduced2_df, chosen
 
                 elif yn2.upper() == "N":
                     valid2 = True
                     chosen = find_chosen(reduced_df)
+                    print("total reviews: ", reduced_df[reduced_df.columns[0]].count())
                     return reduced_df, chosen
 
         elif yn.upper() == "N":
