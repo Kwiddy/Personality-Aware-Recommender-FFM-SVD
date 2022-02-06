@@ -5,6 +5,7 @@ from tqdm import tqdm
 from os.path import exists
 from personality_neighbourhood import get_neighbourhood
 from sklearn.metrics import mean_squared_error
+import numpy as np
 
 
 def getDF(path, parent_path, extension):
@@ -33,16 +34,24 @@ def reduceDF(df, df_code):
             valid = True
             valid3 = False
             while not valid3:
-                yn3 = input("Limit by personality or absolute value? [P/A]: ")
+                yn3 = input("Limit by personality or absolute distribution value? [P/A]: ")
                 print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
                 if yn3.upper() == "A":
                     valid3 = True
                     # get n most common reviewers
                     n = int(input("Enter a number: "))
                     print("Number of reviewers: ", n)
-                    frequents = df['reviewerID'].value_counts()[:n].index.tolist()
+
                     chosen = find_chosen(df)
-                    reduced_df = df[df['reviewerID'].isin(frequents)]
+                    reduced_df = stratified_sampling(n, df, chosen)
+
+                    # frequents = df['reviewerID'].value_counts()[:n].index.tolist()
+                    # chosen = find_chosen(df)
+                    # reduced_df = df[df['reviewerID'].isin(frequents)]
+
+                    print(reduced_df)
+
+
                 elif yn3.upper() == "P":
                     valid3 = True
                     print("Reducing by personality...")
@@ -78,6 +87,48 @@ def reduceDF(df, df_code):
             print(df)
             chosen = find_chosen(df)
             return df, chosen
+
+
+def stratified_sampling(n, df, chosen):
+    print("Conducting Stratified Sampling...")
+    k = n/5
+    steps = 1/(k-1)
+    new_df = pd.DataFrame()
+
+    personalities = pd.read_csv(
+        "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
+
+    saved_df = df.copy()
+    df = df.merge(personalities, on="reviewerID")
+
+    new_df = df.copy()[0:0]
+
+    domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
+
+    count = 1
+    for domain in domains:
+        print(str(count) + "/5")
+        count += 1
+        target = 0
+        for i in range(int(k)):
+            row_to_add = df.iloc[(df[domain] - target).abs().argsort()[0]]
+            new_df = new_df.append(row_to_add)
+            target += steps
+
+    new_df.append(new_df)
+
+    print(new_df)
+
+    # get ids of chosen_users
+    ids = new_df["reviewerID"].unique()
+    ids = np.append(ids, chosen)
+
+    print("Chosen Stratified Sample")
+    final_sample = saved_df[saved_df['reviewerID'].isin(ids)]
+
+    return final_sample
+
+
 
 
 def find_chosen(df):
