@@ -3,15 +3,47 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import imageio
 import numpy as np
+import itertools
 import os
 
 def exploratory_analysis(df):
     personalities = pd.read_csv(
         "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
 
-    print(personalities)
-
     domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
+
+    print(personalities)
+    pairs = list(itertools.combinations(domains, 2))
+
+    print("Calculating Correlations between Personality Domains...")
+
+    correlations = []
+    for pair in pairs:
+        correlation = abs(personalities[pair[0]].corr(personalities[pair[1]]))
+        correlations.append([correlation, pair[0], pair[1]])
+
+    print(correlations)
+
+    # Print all correlations
+    for item in correlations:
+        print("Correlation between " + item[1] + " and " + item[2] + ": " + str(item[0]))
+    print()
+
+    # Graph the top 3 correlations
+    sorted_correlations = sorted(correlations, reverse=True)
+    strongest_corr = sorted_correlations[:3]
+
+    for pair in strongest_corr:
+        x = personalities[pair[1]].tolist()
+        y = personalities[pair[2]].tolist()
+        plt.title("Correlation between " + pair[1] + " and " + pair[2])
+        plt.xlabel(pair[1])
+        plt.ylabel(pair[2])
+        plt.scatter(x, y)
+        plt.savefig("analysis_results/correlation_" + pair[1] + "_" + pair[2] + ".png")
+        plt.clf()
+
+    plt.close()
 
     df = df.merge(personalities, on="reviewerID")
     print(df)
@@ -101,6 +133,8 @@ def exploratory_analysis(df):
             image = imageio.imread(filename)
             writer.append_data(image)
 
+    plt.close()
+
     #################################
     labels = ["1", "2", "3", "4", "5"]
     ext_scores = []
@@ -134,9 +168,10 @@ def exploratory_analysis(df):
     plt.ylabel("Prominence")
     plt.title("Prominence of Personality Traits in Ratings Distribution")
     plt.legend()
-    plt.show()
     plt.savefig("analysis_results/NormalizedTraitScoreCorrelations.png")
     #################################
+
+    print("---- Analysis Completed ----")
 
 
 def normalize(value, min, max):
