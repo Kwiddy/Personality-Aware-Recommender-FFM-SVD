@@ -6,6 +6,7 @@ from lgbmRegressor import create_lightgbm
 from datetime import date, datetime
 from evaluation import evaluate
 from analysis import exploratory_analysis
+from personalityapproach1 import approach1
 from tqdm import tqdm
 import pandas as pd
 
@@ -72,13 +73,16 @@ def select_method(full_df, train, test, chosen_user):
 
     # make an equal number of each case
     equal = full_df.groupby('overall').head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
-
+    user_rows = full_df.loc[full_df['reviewerID'] == chosen_user]
+    equal = pd.concat([equal, user_rows])
+    print("Equal")
+    print(equal)
     print("Rating distribution: ", dict(equal["overall"].value_counts()))
 
     valid2 = False
     while not valid2:
         choice = input("Model or Analysis? [M/A]: ")
-        if choice.upper == "M":
+        if choice.upper() == "M":
             valid2 = True
             valid = False
             while not valid:
@@ -86,7 +90,18 @@ def select_method(full_df, train, test, chosen_user):
                 if yn.upper() == "Y":
                     print("Using Personality....")
                     valid = True
-                    recommendations_df = create_lightgbm(equal, train, chosen_user)
+                    valid_in = False
+                    print("[L] - LightGBM")
+                    print("[S] - SVD Approach")
+                    while not valid_in:
+                        while not valid_in:
+                            method = input("Please choose a method above: ")
+                            if method.upper() == "L":
+                                valid_in = True
+                                recommendations_df = create_lightgbm(equal, train, chosen_user)
+                            if method.upper() == "S":
+                                valid_in = True
+                                recommendations_df = approach1(equal, train, chosen_user)
                 elif yn.upper() == "N":
                     valid = True
                     # choose method
