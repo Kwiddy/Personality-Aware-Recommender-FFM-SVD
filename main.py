@@ -92,16 +92,20 @@ def select_method(full_df, train, test, chosen_user):
                     valid = True
                     valid_in = False
                     print("[L] - LightGBM")
-                    print("[S] - SVD Approach")
+                    print("[S] - SVD")
+                    print("[P] - SVD++")
                     while not valid_in:
                         while not valid_in:
                             method = input("Please choose a method above: ")
                             if method.upper() == "L":
                                 valid_in = True
                                 recommendations_df = create_lightgbm(equal, train, chosen_user)
-                            if method.upper() == "S":
+                            elif method.upper() == "S":
                                 valid_in = True
-                                recommendations_df = approach1(equal, train, chosen_user)
+                                recommendations_df = approach1(equal, train, chosen_user, False)
+                            elif method.upper() == "P":
+                                valid_in = True
+                                recommendations_df = approach1(equal, train, chosen_user, True)
                 elif yn.upper() == "N":
                     valid = True
                     # choose method

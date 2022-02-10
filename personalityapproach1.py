@@ -3,7 +3,7 @@ from surprise import Reader, Dataset, SVD, SVDpp
 import numpy as np
 import pandas as pd
 
-def approach1(full_df, train, chosen_user):
+def approach1(full_df, train, chosen_user, plus_bool):
     personalities = pd.read_csv(
         "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
 
@@ -28,7 +28,10 @@ def approach1(full_df, train, chosen_user):
     # remove the rated movies for the recommendations
     items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 
-    algo = SVD(random_state=R)
+    if plus_bool:
+        algo = SVDpp(random_state=R)
+    else:
+        algo = SVD(random_state=R)
     # algo = SVDpp()
 
     print()
@@ -51,7 +54,10 @@ def approach1(full_df, train, chosen_user):
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(small_df, reader)
 
-    algo = SVD(random_state=R)
+    if plus_bool:
+        algo = SVDpp(random_state=R)
+    else:
+        algo = SVD(random_state=R)
 
     print()
     algo.fit(data.build_full_trainset())
@@ -66,7 +72,10 @@ def approach1(full_df, train, chosen_user):
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(small_df, reader)
 
-    algo = SVD(random_state=R)
+    if plus_bool:
+        algo = SVDpp(random_state=R)
+    else:
+        algo = SVD(random_state=R)
 
     print()
     algo.fit(data.build_full_trainset())
