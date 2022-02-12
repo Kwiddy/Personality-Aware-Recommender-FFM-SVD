@@ -5,6 +5,8 @@ import imageio
 import numpy as np
 import itertools
 import os
+import seaborn as sns
+
 
 def exploratory_analysis(df):
     personalities = pd.read_csv(
@@ -84,6 +86,16 @@ def exploratory_analysis(df):
     print(df["Openness_to_Experience"].max())
 
     print(df)
+
+    ###############################################
+    df = df.drop(columns="Unnamed: 0_y")
+    corr_matrix = df.corr(method="pearson")
+    sns.heatmap(corr_matrix, vmin=-1., vmax=1., annot=True, fmt='.2f', cmap="YlGnBu", cbar=True, linewidths=0.5)
+    plt.title("Pearson Correlation of Features")
+    plt.savefig("analysis_results/correlationmatrix.png", bbox_inches='tight')
+    plt.close()
+
+    ##############################################
 
     translate = {"Ext.": "Extroversion", "Agr.": "Agreeableness", "Con.": "conscientiousness", "Neu.": "Neurotisicm", "Ote.": "Openness_to_Experience"}
 
