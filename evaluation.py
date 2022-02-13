@@ -32,3 +32,15 @@ def calc_rmse(df):
     print(rmse_df)
     print()
     print("RMSE: ", rmse)
+
+    # RMSE for each different scoring
+    rmse_list = [[], [], [], [], []]
+    for index, row in rmse_df.iterrows():
+        rmse_list[int(row["actual"])-1].append(float(row["RMSE"]))
+
+    print("1 Rating RMSE: ", math.sqrt(sum(rmse_list[0]) / len(rmse_list[0])))
+    print("2 Rating RMSE: ", math.sqrt(sum(rmse_list[1]) / len(rmse_list[1])))
+    print("3 Rating RMSE: ", math.sqrt(sum(rmse_list[2]) / len(rmse_list[2])))
+    print("4 Rating RMSE: ", math.sqrt(sum(rmse_list[3]) / len(rmse_list[3])))
+    print("5 Rating RMSE: ", math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])))
+    print()
