@@ -92,6 +92,7 @@ def select_method(full_df, train, test, chosen_user):
                     valid = True
                     valid_in = False
                     print("[L] - LightGBM")
+                    print("[R] - Random Forest")
                     print("[S] - SVD")
                     print("[P] - SVD++")
                     while not valid_in:
@@ -99,7 +100,10 @@ def select_method(full_df, train, test, chosen_user):
                             method = input("Please choose a method above: ")
                             if method.upper() == "L":
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, chosen_user)
+                                recommendations_df = create_lightgbm(equal, train, chosen_user, "L")
+                            elif method.upper() == "R":
+                                valid_in = True
+                                recommendations_df = create_lightgbm(equal, train, chosen_user, "R")
                             elif method.upper() == "S":
                                 valid_in = True
                                 recommendations_df = approach1(equal, train, chosen_user, False)

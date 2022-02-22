@@ -2,6 +2,7 @@ import lightgbm as lgb
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+from sklearn.ensemble import RandomForestRegressor
 import sklearn
 
 
@@ -27,7 +28,7 @@ def pre_process(df):
     return df
 
 
-def create_lightgbm(full_df, train, chosen_user):
+def create_lightgbm(full_df, train, chosen_user, model_choice):
     print("full_df")
     print(full_df)
     print()
@@ -99,7 +100,10 @@ def create_lightgbm(full_df, train, chosen_user):
                                                           test_size=0.4,
                                                           random_state=R)
 
-    model = lgb.LGBMRegressor(n_estimators=100, class_weight="balanced")
+    if model_choice == "L":
+        model = lgb.LGBMRegressor(n_estimators=100, class_weight="balanced")
+    elif model_choice == "R":
+        model = RandomForestRegressor()
     model.fit(x_train, y_train)
 
     # predictions = model.predict(x_test)
@@ -117,8 +121,6 @@ def create_lightgbm(full_df, train, chosen_user):
     # Generate a classification report and other metrics to determin performance
     print("MSE: %.3f" % sklearn.metrics.mean_squared_error(y_target, predictions))
     print("RMSE: %.3f" % sklearn.metrics.mean_squared_error(y_target, predictions, squared=False))
-
-
 
     print()
     print("LightGBM Feature importances: ")
