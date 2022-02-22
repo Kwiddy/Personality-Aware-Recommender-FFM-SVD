@@ -80,11 +80,17 @@ def approach1(full_df, train, chosen_user, plus_bool):
     my_recs = []
     print(len(my_recs1))
     print(len(my_recs2))
+    # get correlations
+    correlation_ext = abs(full_df["Extroversion"].corr(full_df["overall"]))
+    correlation_ote = abs(full_df["Openness_to_Experience"].corr(full_df["overall"]))
+    # give each personality SVD an importance equal to its correlation to the overall score to 2dp
     for i in range(len(my_recs1)):
-        # give id n times as much weighting
-        n = 3
-        results = [my_recs2[i][1], my_recs3[i][1]]
-        for j in range(n):
+        results = []
+        for j in range(int(100*round(float(correlation_ext), 2))):
+            results.append(my_recs2[i][1])
+        for j in range(int(100*round(float(correlation_ote), 2))):
+            results.append(my_recs3[i][1])
+        for j in range(100):
             results.append(my_recs1[i][1])
         mean = sum(results) / len(results)
         my_recs.append((my_recs1[i][0], mean))
