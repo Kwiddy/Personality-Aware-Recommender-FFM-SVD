@@ -42,12 +42,21 @@ def reduceDF(df, df_code):
                     n = int(input("Enter a number: "))
                     print("Number of reviewers: ", n)
 
-                    chosen = find_chosen(df)
-                    reduced_df = stratified_sampling(n, df, chosen)
-
-                    # frequents = df['reviewerID'].value_counts()[:n].index.tolist()
-                    # chosen = find_chosen(df)
-                    # reduced_df = df[df['reviewerID'].isin(frequents)]
+                    valid4 = False
+                    while not valid4:
+                        yn4 = input("Stratified or Random? [S/A]: ")
+                        if yn4.upper() == "S":
+                            valid4 = True
+                            chosen = find_chosen(df)
+                            reduced_df = stratified_sampling(n, df, chosen)
+                        elif yn4.upper() == "A":
+                            valid4 = True
+                            frequents = df['reviewerID'].value_counts()[:n].index.tolist()
+                            chosen = find_chosen(df)
+                            frequents.append(chosen)
+                            reduced_df = df[df['reviewerID'].isin(frequents)]
+                        else:
+                            print("Invalid input - Please enter an 'S' or an 'A'")
 
                     print(reduced_df)
 
