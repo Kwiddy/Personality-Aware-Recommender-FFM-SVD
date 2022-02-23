@@ -2,6 +2,7 @@
 from surprise import Reader, Dataset, SVD, SVDpp
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 
 def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
@@ -41,7 +42,10 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     # remove the rated movies for the recommendations
     items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 
-    algo = SVD(random_state=R)
+    if plus_bool:
+        algo = SVDpp(random_state=R)
+    else:
+        algo = SVD(random_state=R)
 
     algo.fit(data.build_full_trainset())
     my_recs1 = []
@@ -60,7 +64,10 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(small_df, reader)
 
-    algo = SVD(random_state=R)
+    if plus_bool:
+        algo = SVDpp(random_state=R)
+    else:
+        algo = SVD(random_state=R)
 
     algo.fit(data.build_full_trainset())
     my_recs2 = []
@@ -73,7 +80,10 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(small_df, reader)
 
-    algo = SVD(random_state=R)
+    if plus_bool:
+        algo = SVDpp(random_state=R)
+    else:
+        algo = SVD(random_state=R)
 
     algo.fit(data.build_full_trainset())
     my_recs3 = []

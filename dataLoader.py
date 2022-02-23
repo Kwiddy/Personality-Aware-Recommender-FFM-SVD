@@ -58,12 +58,8 @@ def reduceDF(df, df_code):
                         else:
                             print("Invalid input - Please enter an 'S' or an 'A'")
 
-                    print(reduced_df)
-
-
                 elif yn3.upper() == "P":
                     valid3 = True
-                    print("Reducing by personality...")
                     chosen = find_chosen(df, df_code)
                     neighbours_df = get_neighbourhood(chosen, df_code)
                     neighbours = neighbours_df["reviewerID"].unique()
@@ -93,7 +89,6 @@ def reduceDF(df, df_code):
 
         elif yn.upper() == "N":
             valid = True
-            print(df)
             chosen = find_chosen(df, df_code)
             return df, chosen
 
@@ -125,8 +120,6 @@ def stratified_sampling(n, df, chosen):
             target += steps
 
     new_df.append(new_df)
-
-    print(new_df)
 
     # get ids of chosen_users
     ids = new_df["reviewerID"].unique()
