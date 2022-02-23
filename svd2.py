@@ -45,7 +45,6 @@ def create_svd_2(full_df, train, chosen_user, svd_bit):
         
     result = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
 
-
     return result
 
 # # def create_svd_2(full_df, ffm_df, chosen_user):

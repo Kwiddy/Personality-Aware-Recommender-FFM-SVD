@@ -21,7 +21,7 @@ def pre_process(df, asin_convert):
     return df
 
 
-def create_lightgbm(full_df, train, chosen_user, model_choice):
+def create_lightgbm(full_df, train, chosen_user, model_choice, code):
     print("full_df")
     print(full_df)
     print()
@@ -31,7 +31,14 @@ def create_lightgbm(full_df, train, chosen_user, model_choice):
     print("Chosen user")
     print(chosen_user)
 
-    personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
+    if code.upper() == "K":
+        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
+    elif code.upper() == "M":
+        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movie_and_TV_5_personality.csv")
+    elif code.upper() == "V":
+        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Video_Games_5_personality.csv")
+    elif code.upper() == "D":
+        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Digital_Music_5_personality.csv")
 
     R = 42
     target_col = "overall"

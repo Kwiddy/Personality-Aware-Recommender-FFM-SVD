@@ -47,12 +47,12 @@ def reduceDF(df, df_code):
                         yn4 = input("Stratified or Random? [S/A]: ")
                         if yn4.upper() == "S":
                             valid4 = True
-                            chosen = find_chosen(df)
+                            chosen = find_chosen(df, df_code)
                             reduced_df = stratified_sampling(n, df, chosen)
                         elif yn4.upper() == "A":
                             valid4 = True
                             frequents = df['reviewerID'].value_counts()[:n].index.tolist()
-                            chosen = find_chosen(df)
+                            chosen = find_chosen(df, df_code)
                             frequents.append(chosen)
                             reduced_df = df[df['reviewerID'].isin(frequents)]
                         else:
@@ -64,7 +64,7 @@ def reduceDF(df, df_code):
                 elif yn3.upper() == "P":
                     valid3 = True
                     print("Reducing by personality...")
-                    chosen = find_chosen(df)
+                    chosen = find_chosen(df, df_code)
                     neighbours_df = get_neighbourhood(chosen, df_code)
                     neighbours = neighbours_df["reviewerID"].unique()
                     reduced_df = df[df['reviewerID'].isin(neighbours)]
@@ -82,19 +82,19 @@ def reduceDF(df, df_code):
                     reduced2_df = reduced_df.groupby('reviewerID').head(k).reset_index(drop=True)
                     reduced2_df.to_csv("reduced.csv")
                     print("total reviews: ", reduced2_df[reduced2_df.columns[0]].count())
-                    chosen = find_chosen(reduced2_df)
+                    chosen = find_chosen(reduced2_df, df_code)
                     return reduced2_df, chosen
 
                 elif yn2.upper() == "N":
                     valid2 = True
-                    chosen = find_chosen(reduced_df)
+                    chosen = find_chosen(reduced_df, df_code)
                     print("total reviews: ", reduced_df[reduced_df.columns[0]].count())
                     return reduced_df, chosen
 
         elif yn.upper() == "N":
             valid = True
             print(df)
-            chosen = find_chosen(df)
+            chosen = find_chosen(df, df_code)
             return df, chosen
 
 
@@ -140,7 +140,7 @@ def stratified_sampling(n, df, chosen):
 
 
 
-def find_chosen(df):
+def find_chosen(df, code):
     # users_ratings = {}
     # grouped = df.groupby(['reviewerID'])
     # for name, group in tqdm(grouped):
@@ -169,5 +169,18 @@ def find_chosen(df):
     # print(spread)
     # print(sorted(spread, key=lambda x: x[1], reverse=True))
     # print(len(spread))
+    #
+    # exit()
 
-    return "A1CIS4LOWYGZGA"
+    if code.upper() == "K":
+        # kindle
+        return "A1CIS4LOWYGZGA"
+    elif code.upper() == "M":
+        # movie
+        return "A5TZXWU8AALIC"
+    elif code.upper() == "V":
+        # video games
+        return "A2582KMXLK2P06"
+    elif code.upper() == "D":
+        # digital music
+        return "A3W4D8XOGLWUN5"

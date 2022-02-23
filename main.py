@@ -25,7 +25,8 @@ def main():
     # take a test split for the chosen_user 
     train, test = train_test_split(full_df, chosen_user)
 
-    select_method(full_df, train, test, chosen_user)
+    select_method(full_df, train, test, chosen_user, df_code)
+
 
 def choose_data():
     v_choice = False
@@ -66,7 +67,7 @@ def choose_data():
     return file_path, parent_path, extension, df_code
 
 
-def select_method(full_df, train, test, chosen_user):
+def select_method(full_df, train, test, chosen_user, code):
 
     # take equal amounts of each rating
     print("Rating distribution: ", dict(full_df["overall"].value_counts()))
@@ -100,16 +101,16 @@ def select_method(full_df, train, test, chosen_user):
                             method = input("Please choose a method above: ")
                             if method.upper() == "L":
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, chosen_user, "L")
+                                recommendations_df = create_lightgbm(equal, train, chosen_user, "L", code)
                             elif method.upper() == "R":
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, chosen_user, "R")
+                                recommendations_df = create_lightgbm(equal, train, chosen_user, "R", code)
                             elif method.upper() == "S":
                                 valid_in = True
-                                recommendations_df = approach1(equal, train, chosen_user, False)
+                                recommendations_df = approach1(equal, train, chosen_user, False, code)
                             elif method.upper() == "P":
                                 valid_in = True
-                                recommendations_df = approach1(equal, train, chosen_user, True)
+                                recommendations_df = approach1(equal, train, chosen_user, True, code)
                 elif yn.upper() == "N":
                     valid = True
                     # choose method
@@ -148,7 +149,7 @@ def select_method(full_df, train, test, chosen_user):
         else:
             print("Invalid input")
 
-    go_again(full_df, train, test, chosen_user)
+    go_again(full_df, train, test, chosen_user, code)
 
 
 def train_test_split(df, user):
@@ -177,14 +178,14 @@ def train_test_split(df, user):
     return res_train, res_test
 
 
-def go_again(full_df, train, test, chosen_user):
+def go_again(full_df, train, test, chosen_user, code):
     valid = False
     while not valid:
         yn = input("Select a different method? [Y/N]: ")
         if yn.upper() == "Y":
             valid = True
             print()
-            select_method(full_df, train, test, chosen_user)
+            select_method(full_df, train, test, chosen_user, code)
         elif yn.upper() == "N":
             valid = True
 
