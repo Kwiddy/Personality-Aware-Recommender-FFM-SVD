@@ -9,6 +9,7 @@ from analysis import exploratory_analysis
 from personalityapproach1 import approach1
 from tqdm import tqdm
 import pandas as pd
+import numpy as np
 from collections import defaultdict
 
 
@@ -69,17 +70,14 @@ def choose_data():
 
 
 def select_method(full_df, train, test, chosen_user, code):
-
-    # take equal amounts of each rating
-    print("Rating distribution: ", dict(full_df["overall"].value_counts()))
-
     # make an equal number of each case
     equal = full_df.groupby('overall').head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
     user_rows = full_df.loc[full_df['reviewerID'] == chosen_user]
     equal = pd.concat([equal, user_rows])
-    print("Equal")
-    print(equal)
     print("Rating distribution: ", dict(equal["overall"].value_counts()))
+
+    # the number of features in each method for adjusted r**2 metric
+    feature_nums = {1: 7, 2: 7, 3: 4, 4: 4, 5: 2}
 
     valid2 = False
     while not valid2:
@@ -104,21 +102,25 @@ def select_method(full_df, train, test, chosen_user, code):
                             if method.upper() == "L":
                                 valid_in = True
                                 recommendations_df = create_lightgbm(equal, train, chosen_user, "L", code, True)
+                                m_choice = 1
                             elif method.upper() == "R":
                                 valid_in = True
                                 recommendations_df = create_lightgbm(equal, train, chosen_user, "R", code, True)
+                                m_choice = 2
                             elif method.upper() == "S":
                                 valid_in = True
                                 recommendations_df = approach1(equal, train, chosen_user, False, code, True, None)
+                                m_choice = 3
                             elif method.upper() == "P":
                                 valid_in = True
                                 recommendations_df = approach1(equal, train, chosen_user, True, code, True, None)
+                                m_choice = 4
                 elif yn.upper() == "N":
                     valid = True
                     # choose method
                     print("")
                     print("Methods:")
-                    print("[S] - cheat SVD")
+                    # print("[S] - cheat SVD")
                     print("[T] - SVD")
                     print("[P] - SVD++")
                     valid_in = False
@@ -132,10 +134,12 @@ def select_method(full_df, train, test, chosen_user, code):
                             valid_in = True
                             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
                             recommendations_df = create_svd_2(full_df, train, chosen_user, 0)
+                            m_choice = 5
                         if method.upper() == "P":
                             valid_in = True
                             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
                             recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
+                            m_choice = 5
 
                 elif yn.upper() == "A":
                     valid = True
@@ -145,40 +149,47 @@ def select_method(full_df, train, test, chosen_user, code):
                     valid_dp = False
                     while not valid_dp:
                         try:
-                            dp = int(input("Round SVD by (Recommended: 6): "))
+                            dp = int(input("Round SVD by (Recommended: 5): "))
                             valid_dp = True
                         except:
                             print("Invalid - Please enter an integer")
 
                     print("Personality LightGBM...")
-                    results.append(["LightGBM", True, create_lightgbm(equal, train, chosen_user, "L", code, False)])
+                    results.append(["LightGBM", True, True, create_lightgbm(equal, train, chosen_user, "L", code, False), 1])
+                    results.append(["LightGBM", True, False, create_lightgbm(full_df, train, chosen_user, "L", code, False), 1])
                     print("Personality Random Forest...")
-                    results.append(["RandomForest", True, create_lightgbm(equal, train, chosen_user, "R", code, False)])
+                    results.append(["RandomForest", True, True, create_lightgbm(equal, train, chosen_user, "R", code, False), 2])
+                    results.append(["RandomForest", True, False, create_lightgbm(full_df, train, chosen_user, "R", code, False), 2])
                     print("Personality SVD...")
-                    results.append(["SVD", True, approach1(equal, train, chosen_user, False, code, False, dp)])
-                    print("Personality SVD++...")
-                    results.append(["SVD++", True, approach1(equal, train, chosen_user, True, code, False, dp)])
+                    results.append(["SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp), 3])
+                    results.append(["SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp), 3])
                     print("Non-Personality SVD...")
-                    results.append(["SVD", False, create_svd_2(full_df, train, chosen_user, 0)])
+                    results.append(["SVD", False, np.nan, create_svd_2(full_df, train, chosen_user, 0), 5])
+                    print("Personality SVD++...")
+                    results.append(["SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp), 4])
+                    results.append(["SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp), 4])
                     print("Non-Personality SVD++...")
-                    results.append(["SVD", False, create_svd_2(full_df, train, chosen_user, 1)])
+                    results.append(["SVD++", False, np.nan, create_svd_2(full_df, train, chosen_user, 1), 5])
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
             if yn.upper() == "A":
                 # results = [LightGBM, RF, SVD, SVD++]
                 df_dict = defaultdict(list)
+
                 print()
                 for result in results:
-                    response = evaluate(result[2], train, test, chosen_user, False)
+                    response = evaluate(result[3], train, test, chosen_user, False, feature_nums[result[4]])
                     df_dict["Model"].append(result[0])
                     df_dict["Personality"].append(result[1])
+                    df_dict["Personality-balanced"].append(result[2])
                     df_dict["RMSE 1"].append(response[0])
                     df_dict["RMSE 2"].append(response[1])
                     df_dict["RMSE 3"].append(response[2])
                     df_dict["RMSE 4"].append(response[3])
                     df_dict["RMSE 5"].append(response[4])
                     df_dict["Overall RMSE"].append(response[5])
+                    df_dict["Adjusted R2"].append(response[6])
                 result_df = pd.DataFrame(df_dict)
                 result_df = result_df.set_index("Model")
                 print(result_df)
@@ -188,7 +199,7 @@ def select_method(full_df, train, test, chosen_user, code):
                 print("Most recommended")
                 print(recommendations_df.head(10))
 
-                response = evaluate(recommendations_df, train, test, chosen_user, True)
+                response = evaluate(recommendations_df, train, test, chosen_user, True, feature_nums[m_choice])
 
         elif choice.upper() == "A":
             # exploratory_analysis(full_df)

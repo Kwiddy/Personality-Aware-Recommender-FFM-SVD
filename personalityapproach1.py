@@ -24,7 +24,7 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     R = 42
 
     if dp is None:
-        dp = int(input("SVD - Round by (recommended: 6): "))
+        dp = int(input("SVD - Round by (recommended: 5): "))
 
     full_df["Extroversion"] = full_df["Extroversion"].round(dp)
     full_df["Openness_to_Experience"]= full_df["Openness_to_Experience"].round(dp)
