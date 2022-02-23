@@ -44,12 +44,12 @@ def reduceDF(df, df_code):
 
                     valid4 = False
                     while not valid4:
-                        yn4 = input("Stratified or Random? [S/A]: ")
+                        yn4 = input("Stratified or Random? [S/R]: ")
                         if yn4.upper() == "S":
                             valid4 = True
                             chosen = find_chosen(df, df_code)
                             reduced_df = stratified_sampling(n, df, chosen)
-                        elif yn4.upper() == "A":
+                        elif yn4.upper() == "R":
                             valid4 = True
                             frequents = df['reviewerID'].value_counts()[:n].index.tolist()
                             chosen = find_chosen(df, df_code)

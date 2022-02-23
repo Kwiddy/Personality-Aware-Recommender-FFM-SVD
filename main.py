@@ -9,6 +9,7 @@ from analysis import exploratory_analysis
 from personalityapproach1 import approach1
 from tqdm import tqdm
 import pandas as pd
+from collections import defaultdict
 
 
 def main():
@@ -96,21 +97,31 @@ def select_method(full_df, train, test, chosen_user, code):
                     print("[R] - Random Forest")
                     print("[S] - SVD")
                     print("[P] - SVD++")
+                    print("[A] - All")
                     while not valid_in:
                         while not valid_in:
                             method = input("Please choose a method above: ")
                             if method.upper() == "L":
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, chosen_user, "L", code)
+                                recommendations_df = create_lightgbm(equal, train, chosen_user, "L", code, True)
                             elif method.upper() == "R":
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, chosen_user, "R", code)
+                                recommendations_df = create_lightgbm(equal, train, chosen_user, "R", code, True)
                             elif method.upper() == "S":
                                 valid_in = True
-                                recommendations_df = approach1(equal, train, chosen_user, False, code)
+                                recommendations_df = approach1(equal, train, chosen_user, False, code, True, None)
                             elif method.upper() == "P":
                                 valid_in = True
-                                recommendations_df = approach1(equal, train, chosen_user, True, code)
+                                recommendations_df = approach1(equal, train, chosen_user, True, code, True, None)
+                            elif method.upper() == "A":
+                                valid_in = True
+                                # results = [LightGBM, RF, SVD, SVD++]
+                                results = []
+                                dp = get_dp()
+                                results.append(["LightGBM", create_lightgbm(equal, train, chosen_user, "L", code, False)])
+                                results.append(["RandomForest", create_lightgbm(equal, train, chosen_user, "R", code, False)])
+                                results.append(["SVD", approach1(equal, train, chosen_user, False, code, False, dp)])
+                                results.append(["SVD++", approach1(equal, train, chosen_user, True, code, False, dp)])
                 elif yn.upper() == "N":
                     valid = True
                     # choose method
@@ -137,10 +148,29 @@ def select_method(full_df, train, test, chosen_user, code):
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
-            print("Most recommended")
-            print(recommendations_df.head(10))
+            if yn.upper() == "Y" and method.upper() == "A":
+                # results = [LightGBM, RF, SVD, SVD++]
+                df_dict = defaultdict(list)
+                print()
+                for result in results:
+                    response = evaluate(result[1], train, test, chosen_user, False)
+                    df_dict["Model"].append(result[0])
+                    df_dict["RMSE 1"].append(response[0])
+                    df_dict["RMSE 2"].append(response[1])
+                    df_dict["RMSE 3"].append(response[2])
+                    df_dict["RMSE 4"].append(response[3])
+                    df_dict["RMSE 5"].append(response[4])
+                    df_dict["Overall RMSE"].append(response[5])
+                result_df = pd.DataFrame(df_dict)
+                result_df = result_df.set_index("Model")
+                print(result_df)
+                print()
 
-            evaluate(recommendations_df, train, test, chosen_user)
+            else:
+                print("Most recommended")
+                print(recommendations_df.head(10))
+
+                response = evaluate(recommendations_df, train, test, chosen_user, True)
 
         elif choice.upper() == "A":
             # exploratory_analysis(full_df)
@@ -198,6 +228,14 @@ def go_again(full_df, train, test, chosen_user, code):
             main()
         elif yn.upper() == "N":
             valid2 = True
+
+
+def get_dp():
+    try:
+        return int(input("Round SVD by (Recommended: 6): "))
+    except:
+        get_dp()
+
 
 # track runtime
 start = datetime.now()

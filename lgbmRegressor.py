@@ -21,16 +21,7 @@ def pre_process(df, asin_convert):
     return df
 
 
-def create_lightgbm(full_df, train, chosen_user, model_choice, code):
-    print("full_df")
-    print(full_df)
-    print()
-    print("train")
-    print(train)
-    print()
-    print("Chosen user")
-    print(chosen_user)
-
+def create_lightgbm(full_df, train, chosen_user, model_choice, code, disp):
     if code.upper() == "K":
         personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
     elif code.upper() == "M":
@@ -43,9 +34,7 @@ def create_lightgbm(full_df, train, chosen_user, model_choice, code):
     R = 42
     target_col = "overall"
 
-    print(full_df)
     full_df = full_df.merge(personalities, on="reviewerID")
-    print(full_df)
 
     ######################################################
     # # originally: p0.11 = 1.578, p0.11 = 1.530
@@ -77,12 +66,6 @@ def create_lightgbm(full_df, train, chosen_user, model_choice, code):
 
     neighbourhood = full_df[full_df.reviewerID != chosen_user]
     target = full_df[full_df.reviewerID == chosen_user]
-    print("---------------------")
-    print(neighbourhood)
-    print(target)
-
-
-    print(neighbourhood.columns)
 
     asins = full_df.asin.unique()
     reverse_asin_convert = {}
@@ -101,9 +84,6 @@ def create_lightgbm(full_df, train, chosen_user, model_choice, code):
 
     x_target = target.drop(columns=target_col)
     y_target = target[target_col]
-
-    print(neighbourhood.columns)
-    print(target.columns)
 
     x = neighbourhood.drop(columns=target_col)
     y = neighbourhood[target_col]
@@ -128,19 +108,15 @@ def create_lightgbm(full_df, train, chosen_user, model_choice, code):
 
     predictions = model.predict(x_target)
 
-    print(predictions)
-
-    print()
-    print("LightGBM Feature importances: ")
-    hd = list(x_train.columns)
-    for i, f in zip(hd, model.feature_importances_):
-        print(i, round(f * 100, 2))
-    print()
+    if disp:
+        print()
+        print("LightGBM Feature importances: ")
+        hd = list(x_train.columns)
+        for i, f in zip(hd, model.feature_importances_):
+            print(i, round(f * 100, 2))
+        print()
 
     result = x_target.copy()
-    print(y_target)
-    print(x_target)
-    print(predictions)
     result["predictions"] = predictions
     result = result.drop(columns=["unixReviewTime", "Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"])
     result = result.sort_values(by=['predictions'], ascending=False)

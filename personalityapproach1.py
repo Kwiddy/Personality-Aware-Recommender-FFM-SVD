@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-def approach1(full_df, train, chosen_user, plus_bool, code):
+def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     if code.upper() == "K":
         personalities = pd.read_csv(
             "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
@@ -22,11 +22,11 @@ def approach1(full_df, train, chosen_user, plus_bool, code):
 
     R = 42
 
-    # round columns to 2 dp ################## 0.98 with, 0.35 without
-    roundby = int(input("Round by (recommended: 6): "))
-    # roundby = 4
-    full_df["Extroversion"] = full_df["Extroversion"].round(roundby)
-    full_df["Openness_to_Experience"]= full_df["Openness_to_Experience"].round(roundby)
+    if dp is None:
+        dp = int(input("SVD - Round by (recommended: 6): "))
+
+    full_df["Extroversion"] = full_df["Extroversion"].round(dp)
+    full_df["Openness_to_Experience"]= full_df["Openness_to_Experience"].round(dp)
 
     # reduce
     small_df = full_df[["reviewerID", "asin", "overall"]].copy()
@@ -43,17 +43,14 @@ def approach1(full_df, train, chosen_user, plus_bool, code):
 
     algo = SVD(random_state=R)
 
-    print()
     algo.fit(data.build_full_trainset())
     my_recs1 = []
     for iid in items_to_predict:
         my_recs1.append((iid, algo.predict(uid=chosen_user, iid=iid).est))
 
-    print(my_recs1[0])
-
     chosen_peronsality_row = personalities.loc[personalities['reviewerID'] == chosen_user]
-    ext_score = round(float(chosen_peronsality_row["Extroversion"]), roundby)
-    ote_score = round(float(chosen_peronsality_row["Openness_to_Experience"]), roundby)
+    ext_score = round(float(chosen_peronsality_row["Extroversion"]), dp)
+    ote_score = round(float(chosen_peronsality_row["Openness_to_Experience"]), dp)
     # ####################################
     # print(full_df.columns)
 
@@ -65,12 +62,10 @@ def approach1(full_df, train, chosen_user, plus_bool, code):
 
     algo = SVD(random_state=R)
 
-    print()
     algo.fit(data.build_full_trainset())
     my_recs2 = []
     for iid in items_to_predict:
         my_recs2.append((iid, algo.predict(uid=ext_score, iid=iid).est))
-    print(my_recs2[0])
     # ####################################
     # reduce
     small_df = full_df[["Openness_to_Experience", "asin", "overall"]].copy()
@@ -80,16 +75,13 @@ def approach1(full_df, train, chosen_user, plus_bool, code):
 
     algo = SVD(random_state=R)
 
-    print()
     algo.fit(data.build_full_trainset())
     my_recs3 = []
     for iid in items_to_predict:
         my_recs3.append((iid, algo.predict(uid=ote_score, iid=iid).est))
-    print(my_recs3[0])
     # ####################################
     my_recs = []
-    print(len(my_recs1))
-    print(len(my_recs2))
+
     # get correlations
     correlation_ext = abs(full_df["Extroversion"].corr(full_df["overall"]))
     correlation_ote = abs(full_df["Openness_to_Experience"].corr(full_df["overall"]))
