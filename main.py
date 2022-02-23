@@ -88,7 +88,7 @@ def select_method(full_df, train, test, chosen_user, code):
             valid2 = True
             valid = False
             while not valid:
-                yn = input("Include personality in model? [Y/N]: ")
+                yn = input("Include personality in model / Do All? [Y/N/A]: ")
                 if yn.upper() == "Y":
                     print("Using Personality....")
                     valid = True
@@ -113,15 +113,6 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "P":
                                 valid_in = True
                                 recommendations_df = approach1(equal, train, chosen_user, True, code, True, None)
-                            elif method.upper() == "A":
-                                valid_in = True
-                                # results = [LightGBM, RF, SVD, SVD++]
-                                results = []
-                                dp = get_dp()
-                                results.append(["LightGBM", create_lightgbm(equal, train, chosen_user, "L", code, False)])
-                                results.append(["RandomForest", create_lightgbm(equal, train, chosen_user, "R", code, False)])
-                                results.append(["SVD", approach1(equal, train, chosen_user, False, code, False, dp)])
-                                results.append(["SVD++", approach1(equal, train, chosen_user, True, code, False, dp)])
                 elif yn.upper() == "N":
                     valid = True
                     # choose method
@@ -145,16 +136,43 @@ def select_method(full_df, train, test, chosen_user, code):
                             valid_in = True
                             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
                             recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
+
+                elif yn.upper() == "A":
+                    valid = True
+                    # results = [LightGBM, RF, SVD, SVD++]
+                    results = []
+
+                    valid_dp = False
+                    while not valid_dp:
+                        try:
+                            dp = int(input("Round SVD by (Recommended: 6): "))
+                            valid_dp = True
+                        except:
+                            print("Invalid - Please enter an integer")
+
+                    print("Personality LightGBM...")
+                    results.append(["LightGBM", True, create_lightgbm(equal, train, chosen_user, "L", code, False)])
+                    print("Personality Random Forest...")
+                    results.append(["RandomForest", True, create_lightgbm(equal, train, chosen_user, "R", code, False)])
+                    print("Personality SVD...")
+                    results.append(["SVD", True, approach1(equal, train, chosen_user, False, code, False, dp)])
+                    print("Personality SVD++...")
+                    results.append(["SVD++", True, approach1(equal, train, chosen_user, True, code, False, dp)])
+                    print("Non-Personality SVD...")
+                    results.append(["SVD", False, create_svd_2(full_df, train, chosen_user, 0)])
+                    print("Non-Personality SVD++...")
+                    results.append(["SVD", False, create_svd_2(full_df, train, chosen_user, 1)])
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
-            if yn.upper() == "Y" and method.upper() == "A":
+            if yn.upper() == "A":
                 # results = [LightGBM, RF, SVD, SVD++]
                 df_dict = defaultdict(list)
                 print()
                 for result in results:
-                    response = evaluate(result[1], train, test, chosen_user, False)
+                    response = evaluate(result[2], train, test, chosen_user, False)
                     df_dict["Model"].append(result[0])
+                    df_dict["Personality"].append(result[1])
                     df_dict["RMSE 1"].append(response[0])
                     df_dict["RMSE 2"].append(response[1])
                     df_dict["RMSE 3"].append(response[2])
@@ -228,13 +246,6 @@ def go_again(full_df, train, test, chosen_user, code):
             main()
         elif yn.upper() == "N":
             valid2 = True
-
-
-def get_dp():
-    try:
-        return int(input("Round SVD by (Recommended: 6): "))
-    except:
-        get_dp()
 
 
 # track runtime

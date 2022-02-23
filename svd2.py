@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import scipy
 from scipy.linalg import sqrtm
-
+from tqdm import tqdm
 from surprise import NMF, SVD, SVDpp, KNNBasic, KNNWithMeans, KNNWithZScore, CoClustering
 from surprise.model_selection import cross_validate
 from surprise import Reader, Dataset
@@ -37,7 +37,6 @@ def create_svd_2(full_df, train, chosen_user, svd_bit):
     elif svd_bit == 1:
         algo = SVDpp()
 
-    print()    
     algo.fit(data.build_full_trainset())
     my_recs = []
     for iid in items_to_predict:
