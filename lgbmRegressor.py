@@ -9,19 +9,12 @@ import sklearn
 def translate(val, dic):
     return dic[val]
 
-def pre_process(df):
+
+def pre_process(df, asin_convert):
     df = df.drop(
         columns=["Unnamed: 0_x", "Unnamed: 0_y", "verified", "reviewTime", "style", "image", "reviewerName",
                  "reviewText", "summary", "vote"])
     df = df.drop(columns=["reviewerID"])
-
-    asins = df.asin.unique()
-
-    asin_convert = {}
-    id = 0
-    for item in asins:
-        asin_convert[item] = id
-        id += 1
 
     df["asin"] = df.progress_apply(lambda x: translate(x.asin, asin_convert), axis=1)
 
@@ -84,8 +77,20 @@ def create_lightgbm(full_df, train, chosen_user, model_choice):
 
     print(neighbourhood.columns)
 
-    neighbourhood = pre_process(neighbourhood)
-    target = pre_process(target)
+    asins = full_df.asin.unique()
+    reverse_asin_convert = {}
+    id = 0
+    for item in asins:
+        reverse_asin_convert[id] = item
+        id += 1
+    asin_convert = {}
+    id = 0
+    for item in asins:
+        asin_convert[item] = id
+        id += 1
+
+    neighbourhood = pre_process(neighbourhood, asin_convert)
+    target = pre_process(target, asin_convert)
 
     x_target = target.drop(columns=target_col)
     y_target = target[target_col]
@@ -118,16 +123,24 @@ def create_lightgbm(full_df, train, chosen_user, model_choice):
 
     print(predictions)
 
-    # Generate a classification report and other metrics to determin performance
-    print("MSE: %.3f" % sklearn.metrics.mean_squared_error(y_target, predictions))
-    print("RMSE: %.3f" % sklearn.metrics.mean_squared_error(y_target, predictions, squared=False))
-
     print()
     print("LightGBM Feature importances: ")
     hd = list(x_train.columns)
     for i, f in zip(hd, model.feature_importances_):
         print(i, round(f * 100, 2))
     print()
+
+    result = x_target.copy()
+    print(y_target)
+    print(x_target)
+    print(predictions)
+    result["predictions"] = predictions
+    result = result.drop(columns=["unixReviewTime", "Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"])
+    result = result.sort_values(by=['predictions'], ascending=False)
+
+    result["asin"] = result.progress_apply(lambda j: translate(j.asin, reverse_asin_convert), axis=1)
+
+    return result
 
 
 def normalize(value, min, max):
