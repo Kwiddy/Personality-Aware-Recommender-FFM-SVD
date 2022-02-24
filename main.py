@@ -11,6 +11,7 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from collections import defaultdict
+from DLRegression import baseline_nn
 
 
 def main():
@@ -77,7 +78,7 @@ def select_method(full_df, train, test, chosen_user, code):
     print("Rating distribution: ", dict(equal["overall"].value_counts()))
 
     # the number of features in each method for adjusted r**2 metric
-    feature_nums = {1: 7, 2: 7, 3: 4, 4: 4, 5: 2}
+    feature_nums = {1: 7, 2: 7, 3: 4, 4: 4, 5: 2, 6: 7}
 
     valid2 = False
     while not valid2:
@@ -95,6 +96,7 @@ def select_method(full_df, train, test, chosen_user, code):
                     print("[R] - Random Forest")
                     print("[S] - SVD")
                     print("[P] - SVD++")
+                    print("[N] - Neural Network")
                     print("[A] - All")
                     while not valid_in:
                         while not valid_in:
@@ -115,6 +117,10 @@ def select_method(full_df, train, test, chosen_user, code):
                                 valid_in = True
                                 recommendations_df = approach1(equal, train, chosen_user, True, code, True, None)
                                 m_choice = 4
+                            elif method.upper() == "N":
+                                valid_in = True
+                                m_choice = 6
+                                recommendations_df = baseline_nn(equal, train, chosen_user, code, True)
                 elif yn.upper() == "N":
                     valid = True
                     # choose method
@@ -160,16 +166,18 @@ def select_method(full_df, train, test, chosen_user, code):
                     print("Personality Random Forest...")
                     results.append(["RandomForest", True, True, create_lightgbm(equal, train, chosen_user, "R", code, False), 2])
                     results.append(["RandomForest", True, False, create_lightgbm(full_df, train, chosen_user, "R", code, False), 2])
-                    print("Personality SVD...")
-                    results.append(["SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp), 3])
-                    results.append(["SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp), 3])
-                    print("Non-Personality SVD...")
-                    results.append(["SVD", False, np.nan, create_svd_2(full_df, train, chosen_user, 0), 5])
-                    print("Personality SVD++...")
-                    results.append(["SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp), 4])
-                    results.append(["SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp), 4])
-                    print("Non-Personality SVD++...")
-                    results.append(["SVD++", False, np.nan, create_svd_2(full_df, train, chosen_user, 1), 5])
+                    print("Personality 3-SVD...")
+                    results.append(["3-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp), 3])
+                    results.append(["3-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp), 3])
+                    print("Non-Personality 3-SVD...")
+                    results.append(["3-SVD", False, np.nan, create_svd_2(full_df, train, chosen_user, 0), 5])
+                    print("Personality 3-SVD++...")
+                    results.append(["3-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp), 4])
+                    results.append(["3-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp), 4])
+                    print("Non-Personality 3-SVD++...")
+                    results.append(["3-SVD++", False, np.nan, create_svd_2(full_df, train, chosen_user, 1), 5])
+                    print("Baseline NeuralNet...")
+                    results.append(["Baseline NeuralNet", True, True, baseline_nn(equal, train, chosen_user, code, False), 6])
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
@@ -192,13 +200,23 @@ def select_method(full_df, train, test, chosen_user, code):
                     df_dict["Adjusted R2"].append(response[6])
                 result_df = pd.DataFrame(df_dict)
                 result_df = result_df.set_index("Model")
+
+                # M D K V
+                if code == "M":
+                    prefix = "Movies"
+                elif code == "D":
+                    prefix = "Music"
+                elif code == "K":
+                    prefix = "Kindle"
+                elif code == "V":
+                    prefix = "Video_Games"
+                result_df.to_csv("saved_results/" + prefix + "_results.csv")
                 print(result_df)
                 print()
 
             else:
                 print("Most recommended")
                 print(recommendations_df.head(10))
-
                 response = evaluate(recommendations_df, train, test, chosen_user, True, feature_nums[m_choice])
 
         elif choice.upper() == "A":
