@@ -56,7 +56,7 @@ def baseline_nn(full_df, train, chosen_user, code, disp):
     else:
         vb = 0
     # estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=1, verbose=vb, random_state=42)
-    estimator = KerasRegressor(build_fn=baseline_model, epochs=15, batch_size=1, verbose=vb, random_state=42)
+    estimator = KerasRegressor(build_fn=baseline_model, epochs=15, batch_size=1, verbose=vb, random_state=R)
 
     # kfold = KFold(n_splits=2)
     # results = cross_val_score(estimator, x, y, cv=kfold)
