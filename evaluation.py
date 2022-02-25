@@ -25,13 +25,17 @@ def evaluate(results, train, test, user, display, num_features):
 def calc_metrics(df, disp, k):
     rmse_df = df.copy()
     rmse_df["RMSE"] = (df["actual"]-df["predictions"])**2
+    rmse_df["AbsError"] = abs(df["actual"]-df["predictions"])
     
     rmse = math.sqrt(rmse_df["RMSE"].mean())
+
+    mae = rmse_df["AbsError"].mean()
 
     if disp:
         print(rmse_df)
         print()
         print("RMSE: ", rmse)
+        print("MAE: ", mae)
 
     # RMSE for each different scoring
     rmse_list = [[], [], [], [], []]
@@ -56,4 +60,4 @@ def calc_metrics(df, disp, k):
     # [1 RMSE, 2 RMSE, 3 RMSE, 4 RMSE, 5 RMSE, rmse]
     return [math.sqrt(sum(rmse_list[0]) / len(rmse_list[0])), math.sqrt(sum(rmse_list[1]) / len(rmse_list[1])),
             math.sqrt(sum(rmse_list[2]) / len(rmse_list[2])), math.sqrt(sum(rmse_list[3]) / len(rmse_list[3])),
-            math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])), rmse, ar2]
+            math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])), rmse, ar2, mae]

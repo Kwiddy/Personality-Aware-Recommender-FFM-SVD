@@ -197,6 +197,7 @@ def select_method(full_df, train, test, chosen_user, code):
                     df_dict["RMSE 4"].append(response[3])
                     df_dict["RMSE 5"].append(response[4])
                     df_dict["Overall RMSE"].append(response[5])
+                    df_dict["MAE"].append(response[7])
                     df_dict["Adjusted R2"].append(response[6])
                 result_df = pd.DataFrame(df_dict)
                 result_df = result_df.set_index("Model")
