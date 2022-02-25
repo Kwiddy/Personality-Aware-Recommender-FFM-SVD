@@ -34,6 +34,7 @@ def calc_metrics(df, disp, k):
     if disp:
         print(rmse_df)
         print()
+        print(rmse_df.describe())
         print("RMSE: ", rmse)
         print("MAE: ", mae)
 

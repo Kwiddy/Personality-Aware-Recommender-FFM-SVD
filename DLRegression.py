@@ -2,7 +2,7 @@
 from pandas import read_csv
 from keras.models import Sequential
 import scikeras
-from keras.layers import Dense
+from keras.layers import Dense, Dropout
 from keras.callbacks import History
 from scikeras.wrappers import KerasRegressor
 from sklearn.model_selection import cross_val_score
@@ -56,19 +56,26 @@ def baseline_nn(full_df, train, chosen_user, code, disp):
     else:
         vb = 0
     # estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=1, verbose=vb, random_state=42)
-    estimator = KerasRegressor(build_fn=baseline_model, epochs=15, batch_size=1, verbose=vb, random_state=R)
+    estimator = KerasRegressor(build_fn=baseline_model, epochs=25, batch_size=1, verbose=vb, random_state=R)
 
     # kfold = KFold(n_splits=2)
     # results = cross_val_score(estimator, x, y, cv=kfold)
     # print("Baseline: %.2f (%.2f) MSE" % (results.mean(), results.std()))
 
-    history = estimator.fit(x, y)
-    predictions = estimator.predict(x_target)
-    # print(x_target[x_target.columns[0]].count())
-    # print(pred)
-    # print(len(pred))
+    from sklearn.preprocessing import StandardScaler
+    sc = StandardScaler()
+    x = sc.fit_transform(x)
+    x_target_save = x_target.copy()
+    x_target = sc.transform(x_target)
 
-    result = x_target.copy()
+    history = estimator.fit(x, y)
+    preds = estimator.predict(x_target)
+
+    predictions = []
+    for item in preds:
+        predictions.append(float(item))
+
+    result = x_target_save.copy()
     result["predictions"] = predictions
     result = result.drop(columns=["unixReviewTime", "Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm",
                                   "Openness_to_Experience"])
@@ -92,7 +99,10 @@ def baseline_nn(full_df, train, chosen_user, code, disp):
 def baseline_model():
     # create model
     model = Sequential()
-    model.add(Dense(7, input_dim=7, kernel_initializer='normal', activation='relu'))
+    model.add(Dense(20, input_dim=7, kernel_initializer='normal', activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(10, kernel_initializer='normal', activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Dense(1, kernel_initializer='normal'))
     # Compile model
     model.compile(loss='mean_squared_error', optimizer='adam')
