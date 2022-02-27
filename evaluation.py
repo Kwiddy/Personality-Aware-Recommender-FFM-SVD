@@ -1,6 +1,9 @@
 import math
 import pandas as pd
 from sklearn.metrics import r2_score
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def evaluate(results, train, test, user, display, num_features):
@@ -65,3 +68,44 @@ def calc_metrics(df, disp, k):
     return [math.sqrt(sum(rmse_list[0]) / len(rmse_list[0])), math.sqrt(sum(rmse_list[1]) / len(rmse_list[1])),
             math.sqrt(sum(rmse_list[2]) / len(rmse_list[2])), math.sqrt(sum(rmse_list[3]) / len(rmse_list[3])),
             math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])), rmse, ar2, mae, std]
+
+
+def global_eval(df):
+
+    # only keep the best of each approach
+    best_idx = df.groupby(['Model'])['Overall RMSE'].transform(min) == df['Overall RMSE']
+    best_df = df[best_idx].copy()
+
+    # create rmse graph
+    totals = {}
+    for index, row in best_df.iterrows():
+        totals[row["Model"]] = [row["RMSE 1"], row["RMSE 2"], row["RMSE 3"], row["RMSE 4"], row["RMSE 5"]]
+
+    labels = [k for k, v in totals.items()]
+    rmse1_scores = []
+    rmse2_scores = []
+    rmse3_scores = []
+    rmse4_scores = []
+    rmse5_scores = []
+    for k, v in totals.items():
+        rmse1_scores.append(v[0])
+        rmse2_scores.append(v[1])
+        rmse3_scores.append(v[2])
+        rmse4_scores.append(v[3])
+        rmse5_scores.append(v[4])
+
+    X_axis = np.arange(len(labels))
+
+    f, ax = plt.subplots(figsize=(18, 5))  # set the size that you'd like (width, height)
+    plt.bar(X_axis - 0.3, rmse1_scores, 0.15, label='RMSE 1')
+    plt.bar(X_axis - 0.15, rmse2_scores, 0.15, label='RMSE 2')
+    plt.bar(X_axis, rmse3_scores, 0.15, label='RMSE 3')
+    plt.bar(X_axis + 0.15, rmse4_scores, 0.15, label='RMSE 4')
+    plt.bar(X_axis + 0.3, rmse5_scores, 0.15, label='RMSE 5')
+
+    plt.xticks(X_axis, labels)
+    plt.xlabel("Model")
+    plt.ylabel("RMSE")
+    plt.title("Model RMSE Scores per Rating")
+    plt.legend()
+    plt.savefig("saved_results/RMSEResults.png")

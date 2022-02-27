@@ -4,7 +4,7 @@ from svd import create_svd
 from svd2 import create_svd_2
 from lgbmRegressor import create_lightgbm
 from datetime import date, datetime
-from evaluation import evaluate
+from evaluation import evaluate, global_eval
 from analysis import exploratory_analysis
 from personalityapproach1 import approach1
 from tqdm import tqdm
@@ -199,9 +199,10 @@ def select_method(full_df, train, test, chosen_user, code):
                     df_dict["Overall RMSE"].append(response[5])
                     df_dict["MAE"].append(response[7])
                     df_dict["Adjusted R2"].append(response[6])
-                    df_dict["Predictions StD"].append(response[8])
+                    df_dict["Prediction StD"].append(response[8])
                 result_df = pd.DataFrame(df_dict)
-                result_df = result_df.set_index("Model")
+                formatted_df = result_df.copy()
+                formatted_df = formatted_df.set_index("Model")
 
                 # M D K V
                 if code == "M":
@@ -212,8 +213,11 @@ def select_method(full_df, train, test, chosen_user, code):
                     prefix = "Kindle"
                 elif code == "V":
                     prefix = "Video_Games"
-                result_df.to_csv("saved_results/" + prefix + "_results.csv")
-                print(result_df)
+                formatted_df.to_csv("saved_results/" + prefix + "_results.csv")
+                print(formatted_df)
+
+                global_eval(result_df)
+
                 print()
 
             else:
