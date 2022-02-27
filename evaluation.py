@@ -29,6 +29,9 @@ def calc_metrics(df, disp, k):
     
     rmse = math.sqrt(rmse_df["RMSE"].mean())
 
+    # get the standard deviation of the predictions
+    std = float(df["predictions"].std())
+
     mae = rmse_df["AbsError"].mean()
 
     if disp:
@@ -61,4 +64,4 @@ def calc_metrics(df, disp, k):
     # [1 RMSE, 2 RMSE, 3 RMSE, 4 RMSE, 5 RMSE, rmse]
     return [math.sqrt(sum(rmse_list[0]) / len(rmse_list[0])), math.sqrt(sum(rmse_list[1]) / len(rmse_list[1])),
             math.sqrt(sum(rmse_list[2]) / len(rmse_list[2])), math.sqrt(sum(rmse_list[3]) / len(rmse_list[3])),
-            math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])), rmse, ar2, mae]
+            math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])), rmse, ar2, mae, std]

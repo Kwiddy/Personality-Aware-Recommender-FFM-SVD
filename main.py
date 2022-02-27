@@ -190,7 +190,7 @@ def select_method(full_df, train, test, chosen_user, code):
                     response = evaluate(result[3], train, test, chosen_user, False, feature_nums[result[4]])
                     df_dict["Model"].append(result[0])
                     df_dict["Personality"].append(result[1])
-                    df_dict["Personality-balanced"].append(result[2])
+                    df_dict["Ratings-balanced"].append(result[2])
                     df_dict["RMSE 1"].append(response[0])
                     df_dict["RMSE 2"].append(response[1])
                     df_dict["RMSE 3"].append(response[2])
@@ -199,6 +199,7 @@ def select_method(full_df, train, test, chosen_user, code):
                     df_dict["Overall RMSE"].append(response[5])
                     df_dict["MAE"].append(response[7])
                     df_dict["Adjusted R2"].append(response[6])
+                    df_dict["Predictions StD"].append(response[8])
                 result_df = pd.DataFrame(df_dict)
                 result_df = result_df.set_index("Model")
 
