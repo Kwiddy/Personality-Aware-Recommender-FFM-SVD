@@ -4,9 +4,10 @@ from sklearn.metrics import r2_score
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 
-def evaluate(results, train, test, user, display, num_features):
+def evaluate(df_code, model_name, personality_type, balance_type, results, train, test, user, display, num_features):
     # get the test split for the chosen user
     user_test = test.loc[test['reviewerID'] == user]
     user_test_relev = user_test[["asin", "overall"]].copy()
@@ -20,12 +21,14 @@ def evaluate(results, train, test, user, display, num_features):
 
     comparison = user_test_relev.join(results)
 
-    result = calc_metrics(comparison, display, num_features)
+    result = calc_metrics(df_code, comparison, display, num_features, model_name, personality_type, balance_type)
 
     return result
 
 
-def calc_metrics(df, disp, k):
+def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_type):
+    if disp:
+        results_graph(df, model_name, personality_type, balance_type, df_code)
     rmse_df = df.copy()
     rmse_df["RMSE"] = (df["actual"]-df["predictions"])**2
     rmse_df["AbsError"] = abs(df["actual"]-df["predictions"])
@@ -70,7 +73,27 @@ def calc_metrics(df, disp, k):
             math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])), rmse, ar2, mae, std]
 
 
-def global_eval(df):
+def results_graph(df, model_name, personality_type, balance_type, df_code):
+    # create predictions/actual scatter plot
+    title = df_code + "_" + model_name
+    if personality_type:
+        title += "_personality"
+    else:
+        title += "_no_personality"
+    if balance_type:
+        title += "ratings_balanced"
+    else:
+        title += "not_rating_balanced"
+    # plot = df.plot.scatter(x='actual', y='predictions', c='DarkBlue')
+    # fig = plot.get_figure()
+    # fig.savefig("saved_results/" + title + ".png")
+
+    scatplot = sns.regplot(x=df['actual'], y=df['predictions'])
+    fig = scatplot.get_figure()
+    fig.savefig("saved_results/" + title + ".png")
+
+
+def global_eval(df, indiv_dfs, test, user):
 
     # only keep the best of each approach
     best_idx = df.groupby(['Model'])['Overall RMSE'].transform(min) == df['Overall RMSE']
@@ -109,3 +132,44 @@ def global_eval(df):
     plt.title("Model RMSE Scores per Rating")
     plt.legend()
     plt.savefig("saved_results/RMSEResults.png")
+
+    plt.close()
+
+    groups = [["LightGBM", "RandomForest"], ["3-SVD", "SVD"], ["3-SVD++", "SVD++"], ["Baseline NeuralNet"]]
+    for group in groups:
+        fig, ax = plt.subplots(figsize=(8, 8))
+        for item in indiv_dfs:
+            lbl = item[0]
+            if lbl in group:
+                if item[2]:
+                    lbl += " - Personality"
+                if item[3]:
+                    lbl += " - Ratings-Balanced"
+                resultant_df = item[1]
+                user_test = test.loc[test['reviewerID'] == user]
+                user_test_relev = user_test[["asin", "overall"]].copy()
+
+                # rename overall to actual
+                user_test_relev = user_test_relev.rename(columns={"overall": "actual"})
+
+                # set asin as index for both
+                user_test_relev = user_test_relev.set_index('asin')
+                results = resultant_df.set_index('asin')
+
+                comparison = user_test_relev.join(results)
+                sns.regplot(x='actual', y='predictions', data=comparison, ax=ax, label=lbl)
+
+        ax.set(ylabel='Prediction', xlabel='Actual')
+        ax.legend()
+        if "LightGBM" in group:
+            title = "saved_results/Predictions_True_Scatter_Tree.png"
+        elif "SVD" in group:
+            title = "saved_results/Predictions_True_Scatter_SVD.png"
+        elif "SVD++" in group:
+            title = "saved_results/Predictions_True_Scatter_SVDpp.png"
+        else:
+            title = "saved_results/Predictions_True_Scatter_NN.png"
+        plt.savefig(title)
+        plt.show()
+        plt.clf()
+        plt.close()
