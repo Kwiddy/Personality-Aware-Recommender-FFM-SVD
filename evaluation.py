@@ -44,9 +44,11 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
         print(rmse_df)
         print()
         print(rmse_df.describe())
+        print()
         print("RMSE: ", rmse)
         print("MAE: ", mae)
         print("StD: ", std)
+        print()
 
     # RMSE for each different scoring
     rmse_list = [[], [], [], [], []]
