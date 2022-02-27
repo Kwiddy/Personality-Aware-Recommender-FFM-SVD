@@ -43,9 +43,9 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 
     if plus_bool:
-        algo = SVDpp(random_state=R)
+        algo = SVDpp(random_state=R, verbose=True)
     else:
-        algo = SVD(random_state=R)
+        algo = SVD(random_state=R, verbose=True)
 
     algo.fit(data.build_full_trainset())
     my_recs1 = []
@@ -65,9 +65,9 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     data = Dataset.load_from_df(small_df, reader)
 
     if plus_bool:
-        algo = SVDpp(random_state=R)
+        algo = SVDpp(random_state=R, verbose=True)
     else:
-        algo = SVD(random_state=R)
+        algo = SVD(random_state=R, verbose=True)
 
     algo.fit(data.build_full_trainset())
     my_recs2 = []
@@ -81,9 +81,9 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     data = Dataset.load_from_df(small_df, reader)
 
     if plus_bool:
-        algo = SVDpp(random_state=R)
+        algo = SVDpp(random_state=R, verbose=True)
     else:
-        algo = SVD(random_state=R)
+        algo = SVD(random_state=R, verbose=True)
 
     algo.fit(data.build_full_trainset())
     my_recs3 = []
