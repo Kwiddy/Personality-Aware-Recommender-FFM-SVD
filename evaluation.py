@@ -138,6 +138,84 @@ def global_eval(df, indiv_dfs, test, user):
 
     plt.close()
 
+    ############################
+    # plot just SVD vs 6SVD and SVD++ vs 6SVD++
+    totals = {}
+    svd_names = ["SVD", "6-SVD"]
+    for index, row in best_df.iterrows():
+        if row["Model"] in svd_names:
+            totals[row["Model"]] = [row["RMSE 1"], row["RMSE 2"], row["RMSE 3"], row["RMSE 4"], row["RMSE 5"]]
+
+    labels = [k for k, v in totals.items()]
+    rmse1_scores = []
+    rmse2_scores = []
+    rmse3_scores = []
+    rmse4_scores = []
+    rmse5_scores = []
+    for k, v in totals.items():
+        rmse1_scores.append(v[0])
+        rmse2_scores.append(v[1])
+        rmse3_scores.append(v[2])
+        rmse4_scores.append(v[3])
+        rmse5_scores.append(v[4])
+
+    X_axis = np.arange(len(labels))
+
+    f, ax = plt.subplots(figsize=(18, 5))  # set the size that you'd like (width, height)
+    plt.bar(X_axis - 0.3, rmse1_scores, 0.15, label='RMSE 1')
+    plt.bar(X_axis - 0.15, rmse2_scores, 0.15, label='RMSE 2')
+    plt.bar(X_axis, rmse3_scores, 0.15, label='RMSE 3')
+    plt.bar(X_axis + 0.15, rmse4_scores, 0.15, label='RMSE 4')
+    plt.bar(X_axis + 0.3, rmse5_scores, 0.15, label='RMSE 5')
+
+    plt.xticks(X_axis, labels)
+    plt.xlabel("Model")
+    plt.ylabel("RMSE")
+    plt.title("Model RMSE Scores per Rating")
+    plt.legend()
+    plt.savefig("saved_results/SVDRMSEResults.png")
+
+    plt.close()
+
+    totals = {}
+    svd_names = ["SVD++", "6-SVD++"]
+    for index, row in best_df.iterrows():
+        if row["Model"] in svd_names:
+            totals[row["Model"]] = [row["RMSE 1"], row["RMSE 2"], row["RMSE 3"], row["RMSE 4"], row["RMSE 5"]]
+
+    labels = [k for k, v in totals.items()]
+    rmse1_scores = []
+    rmse2_scores = []
+    rmse3_scores = []
+    rmse4_scores = []
+    rmse5_scores = []
+    for k, v in totals.items():
+        rmse1_scores.append(v[0])
+        rmse2_scores.append(v[1])
+        rmse3_scores.append(v[2])
+        rmse4_scores.append(v[3])
+        rmse5_scores.append(v[4])
+
+    X_axis = np.arange(len(labels))
+
+    f, ax = plt.subplots(figsize=(18, 5))  # set the size that you'd like (width, height)
+    plt.bar(X_axis - 0.3, rmse1_scores, 0.15, label='RMSE 1')
+    plt.bar(X_axis - 0.15, rmse2_scores, 0.15, label='RMSE 2')
+    plt.bar(X_axis, rmse3_scores, 0.15, label='RMSE 3')
+    plt.bar(X_axis + 0.15, rmse4_scores, 0.15, label='RMSE 4')
+    plt.bar(X_axis + 0.3, rmse5_scores, 0.15, label='RMSE 5')
+
+    plt.xticks(X_axis, labels)
+    plt.xlabel("Model")
+    plt.ylabel("RMSE")
+    plt.title("Model RMSE Scores per Rating")
+    plt.legend()
+    plt.savefig("saved_results/SVDppRMSEResults.png")
+
+    plt.close()
+
+    ############################
+
     groups = [["LightGBM", "RandomForest"], ["3-SVD", "SVD"], ["3-SVD++", "SVD++"], ["Baseline NeuralNet"]]
     for group in groups:
         fig, ax = plt.subplots(figsize=(8, 8))

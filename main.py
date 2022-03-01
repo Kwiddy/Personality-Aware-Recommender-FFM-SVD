@@ -117,14 +117,14 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "S":
                                 valid_in = True
                                 recommendations_df = approach1(equal, train, chosen_user, False, code, True, None)
-                                m_name = "3-SVD"
+                                m_name = "6-SVD"
                                 m_choice = 3
                                 p_type = True
                                 b_type = True
                             elif method.upper() == "P":
                                 valid_in = True
                                 recommendations_df = approach1(equal, train, chosen_user, True, code, True, None)
-                                m_name = "3-SVD++"
+                                m_name = "6-SVD++"
                                 p_type = True
                                 b_type = True
                                 m_choice = 4
@@ -194,19 +194,19 @@ def select_method(full_df, train, test, chosen_user, code):
                     results.append(
                         ["RandomForest", True, False, create_lightgbm(full_df, train, chosen_user, "R", code, False),
                          2])
-                    print("Personality 3-SVD...")
+                    print("Personality 6-SVD...")
                     results.append(
-                        ["3-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp), 3])
+                        ["6-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp), 3])
                     results.append(
-                        ["3-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp), 3])
+                        ["6-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp), 3])
                     print("Non-Personality SVD...")
                     results.append(["SVD", False, False, create_svd_2(full_df, train, chosen_user, 0), 5])
                     results.append(["SVD", False, True, create_svd_2(full_df, train, chosen_user, 0), 5])
-                    print("Personality 3-SVD++...")
+                    print("Personality 6-SVD++...")
                     results.append(
-                        ["3-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp), 4])
+                        ["6-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp), 4])
                     results.append(
-                        ["3-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp), 4])
+                        ["6-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp), 4])
                     print("Non-Personality SVD++...")
                     results.append(["SVD++", False, False, create_svd_2(full_df, train, chosen_user, 1), 5])
                     results.append(["SVD++", False, True, create_svd_2(equal, train, chosen_user, 1), 5])

@@ -68,6 +68,9 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
     corr_con, my_recs5 = personality_svd("conscientiousness", full_df, items_to_predict, con_Score, plus_bool, R)
     corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, items_to_predict, neu_score, plus_bool, R)
 
+    map_corr = (corr_con + corr_agr + corr_ote + corr_neu + corr_ext) / 5
+    print("Mean Absolute Personality (MAP) Correlation: ", map_corr)
+
     # ####################################
 
     my_recs = []
