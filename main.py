@@ -21,6 +21,8 @@ dp_round = None
 restrict_reviews = None
 limit = None
 limit_method = None
+g_results = []
+g_all = False
 
 def main():
     global restrict_reviews
@@ -46,6 +48,8 @@ def main():
         train, test = train_test_split(full_df, chosen_user)
 
         select_method(full_df, train, test, chosen, df_code)
+
+    output_results()
 
     go_again(full_df, train, test, chosen_user, df_code)
 
@@ -94,6 +98,8 @@ def select_method(full_df, train, test, chosen_user, code):
     global model_analysis
     global method_choice
     global dp_round
+    global g_results
+    global g_all
 
     # make an equal number of each case
     equal = full_df.groupby('overall').head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
@@ -216,6 +222,7 @@ def select_method(full_df, train, test, chosen_user, code):
 
                 elif yn.upper() == "A":
                     valid = True
+                    g_all = True
                     # results = [LightGBM, RF, SVD, SVD++]
                     results = []
 
@@ -310,6 +317,7 @@ def select_method(full_df, train, test, chosen_user, code):
                 print("Most recommended")
                 print(recommendations_df.head(10))
                 response = evaluate(code, m_name, p_type, b_type, recommendations_df, train, test, chosen_user, True, feature_nums[m_choice])
+                g_results.append(response)
 
         elif choice.upper() == "A":
             # exploratory_analysis(full_df)
@@ -365,5 +373,27 @@ def go_again(full_df, train, test, chosen_user, code):
             main()
         elif yn.upper() == "N":
             valid2 = True
+
+
+def output_results():
+    global g_results
+    global g_all
+
+    if not g_all:
+        df_dict = defaultdict(list)
+
+        for result in g_results:
+            df_dict["RMSE 1"].append(result[0])
+            df_dict["RMSE 2"].append(result[1])
+            df_dict["RMSE 3"].append(result[2])
+            df_dict["RMSE 4"].append(result[3])
+            df_dict["RMSE 5"].append(result[4])
+            df_dict["Overall RMSE"].append(result[5])
+            df_dict["MAE"].append(result[7])
+            df_dict["Adjusted R2"].append(result[6])
+            df_dict["Prediction StD"].append(result[8])
+        result_df = pd.DataFrame(df_dict)
+        formatted_df = result_df.copy()
+        print(formatted_df)
 
 main()
