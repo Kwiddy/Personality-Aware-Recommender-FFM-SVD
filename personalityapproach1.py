@@ -95,7 +95,7 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp):
 
     result = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
 
-    return result
+    return result, dp
 
 
 def personality_svd(personality, full_df, items_to_predict, user_score, plus_bool, R):

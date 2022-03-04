@@ -13,8 +13,20 @@ import numpy as np
 from collections import defaultdict
 from DLRegression import baseline_nn
 
+# Initialise globals
+pers_yes = None
+model_analysis = None
+method_choice = None
+dp_round = None
+restrict_reviews = None
+limit = None
+limit_method = None
 
 def main():
+    global restrict_reviews
+    global limit_method
+    global limit
+
     file_path, parent_path, ext, df_code = choose_data()
 
     retrieved_df = getDF(file_path, parent_path, ext)
@@ -23,7 +35,10 @@ def main():
     print("Chosen users: ", chosen_user)
 
     for chosen in chosen_user:
-        full_df = reduceDF(retrieved_df, df_code, chosen)
+        full_df, rr, lm, lim = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit)
+        restrict_reviews = rr
+        limit_method = lm
+        limit = lim
 
         # ffm_df = review_APR(full_df, parent_path, ext)
 
@@ -75,6 +90,11 @@ def choose_data():
 
 
 def select_method(full_df, train, test, chosen_user, code):
+    global pers_yes
+    global model_analysis
+    global method_choice
+    global dp_round
+
     # make an equal number of each case
     equal = full_df.groupby('overall').head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
     user_rows = full_df.loc[full_df['reviewerID'] == chosen_user]
@@ -86,24 +106,37 @@ def select_method(full_df, train, test, chosen_user, code):
 
     valid2 = False
     while not valid2:
-        choice = input("Model or Analysis? [M/A]: ")
+        if model_analysis is not None:
+            choice = model_analysis
+        else:
+            choice = input("Model or Analysis? [M/A]: ")
+            model_analysis = choice
         if choice.upper() == "M":
             valid2 = True
             valid = False
             while not valid:
-                yn = input("Include personality in model / Do All? [Y/N/A]: ")
+                if pers_yes is not None:
+                    yn = pers_yes
+                else:
+                    yn = input("Include personality in model / Do All? [Y/N/A]: ")
+                    pers_yes = yn
                 if yn.upper() == "Y":
                     print("Using Personality....")
                     valid = True
                     valid_in = False
-                    print("[L] - LightGBM")
-                    print("[R] - Random Forest")
-                    print("[S] - SVD")
-                    print("[P] - SVD++")
-                    print("[N] - Neural Network")
+                    if method_choice is None:
+                        print("[L] - LightGBM")
+                        print("[R] - Random Forest")
+                        print("[S] - SVD")
+                        print("[P] - SVD++")
+                        print("[N] - Neural Network")
                     while not valid_in:
                         while not valid_in:
-                            method = input("Please choose a method above: ")
+                            if method_choice is not None:
+                                method = method_choice
+                            else:
+                                method = input("Please choose a method above: ")
+                                method_choice = method
                             if method.upper() == "L":
                                 valid_in = True
                                 recommendations_df = create_lightgbm(equal, train, chosen_user, "L", code, True)
@@ -120,14 +153,16 @@ def select_method(full_df, train, test, chosen_user, code):
                                 b_type = True
                             elif method.upper() == "S":
                                 valid_in = True
-                                recommendations_df = approach1(equal, train, chosen_user, False, code, True, None)
+                                recommendations_df, dp_result = approach1(equal, train, chosen_user, False, code, True, dp_round)
+                                dp_round = dp_result
                                 m_name = "6-SVD"
                                 m_choice = 3
                                 p_type = True
                                 b_type = True
                             elif method.upper() == "P":
                                 valid_in = True
-                                recommendations_df = approach1(equal, train, chosen_user, True, code, True, None)
+                                recommendations_df, dp_result = approach1(equal, train, chosen_user, True, code, True, dp_round)
+                                dp_round = dp_result
                                 m_name = "6-SVD++"
                                 p_type = True
                                 b_type = True
@@ -143,13 +178,18 @@ def select_method(full_df, train, test, chosen_user, code):
                     valid = True
                     # choose method
                     print("")
-                    print("Methods:")
-                    # print("[S] - cheat SVD")
-                    print("[T] - SVD")
-                    print("[P] - SVD++")
+                    if method_choice is None:
+                        print("Methods:")
+                        # print("[S] - cheat SVD")
+                        print("[T] - SVD")
+                        print("[P] - SVD++")
                     valid_in = False
                     while not valid_in:
-                        method = input("Please choose a method above: ")
+                        if method_choice is not None:
+                            method = method_choice
+                        else:
+                            method = input("Please choose a method above: ")
+                            method_choice = method
                         if method.upper() == "S":
                             valid_in = True
                             # recommendations = create_svd(full_df, ffm_df, chosen_user)
@@ -179,13 +219,18 @@ def select_method(full_df, train, test, chosen_user, code):
                     # results = [LightGBM, RF, SVD, SVD++]
                     results = []
 
-                    valid_dp = False
-                    while not valid_dp:
-                        try:
-                            dp = int(input("Round SVD by (Recommended: 5): "))
-                            valid_dp = True
-                        except:
-                            print("Invalid - Please enter an integer")
+                    print("dp_round: ", dp_round)
+                    if dp_round is not None:
+                        dp = dp_round
+                    else:
+                        valid_dp = False
+                        while not valid_dp:
+                            try:
+                                dp = int(input("Round SVD by (Recommended: 5): "))
+                                dp_round = dp
+                                valid_dp = True
+                            except:
+                                print("Invalid - Please enter an integer")
 
                     print("Personality LightGBM...")
                     results.append(
