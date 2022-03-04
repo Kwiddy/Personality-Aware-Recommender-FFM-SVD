@@ -79,6 +79,7 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                         if sub_limit_method is not None:
                             yn5 = sub_limit_method
                         else:
+                            print()
                             print("[N] Neighbourhood")
                             # print("[L] Linear Stratified")
                             print("[S] Logarithmic Stratified")
