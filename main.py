@@ -294,6 +294,8 @@ def select_method(full_df, train, test, chosen_user, code):
                 formatted_df = result_df.copy()
                 formatted_df = formatted_df.set_index("Model")
 
+                g_results.append(result_df)
+
                 if code == "M":
                     prefix = "Movies"
                 elif code == "D":
@@ -395,5 +397,29 @@ def output_results():
         result_df = pd.DataFrame(df_dict)
         formatted_df = result_df.copy()
         print(formatted_df)
+
+    else:
+        combined_results = pd.concat(g_results)
+        combined_results = combined_results.set_index(["Model", "Personality", "Ratings-balanced"])
+        print(combined_results)
+        print()
+        grouped_df = combined_results.groupby(combined_results.index)
+
+        # average_df = pd.DataFrame(columns=list(g_results[0]))
+        # print(average_df)
+        average_df = grouped_df.mean()
+        average_df = average_df.reset_index()
+        # average_df.loc[average_df['Personality'] > 0, 'Personality'] = True
+        # average_df.loc[average_df['Personality'] == 0, 'Personality'] = False
+        # average_df.loc[average_df['Ratings-balanced'] > 0, 'Ratings-balanced'] = True
+        # average_df.loc[average_df['Ratings-balanced'] == 0, 'Ratings-balanced'] = False
+        average_df[['Model', 'Personality', 'Ratings-balanced']] = pd.DataFrame(average_df['index'].tolist(), index=average_df.index)
+        average_df = average_df.drop('index', axis=1)
+        cols = average_df.columns.tolist()
+        cols = cols[-3:] + cols[:-3]
+        average_df = average_df[cols]
+        print(average_df)
+
+
 
 main()

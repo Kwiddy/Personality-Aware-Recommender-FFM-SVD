@@ -251,6 +251,5 @@ def global_eval(df, indiv_dfs, test, user):
         else:
             title = "saved_results/Predictions_True_Scatter_NN.png"
         plt.savefig(title)
-        plt.show()
         plt.clf()
         plt.close()
