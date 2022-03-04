@@ -65,11 +65,12 @@ def get_neighbourhood(user, df_code):
     sims_df = find_neighbours(user, df_code)
     while not happy:
         try:
-            threshold = float(input("Enter a threshold value (e.g. 0.3): "))
-            # print(threshold)
-            # print(type(threshold))
-            # print(user)
-            df = sims_df[sims_df['diff'] <= threshold]
+            # threshold = float(input("Enter a threshold value (e.g. 0.3): "))
+            # df = sims_df[sims_df['diff'] <= threshold]
+
+            # get top 5% of most similar users
+            df = sims_df.nsmallest((int(sims_df[sims_df.columns[0]].count() / 100)*5), 'diff')
+
             print("Number of rows: ", df[df.columns[0]].count())
             # print(df)
             # exit()
