@@ -54,8 +54,6 @@ def main():
 
     output_results()
 
-    go_again(full_df, train, test, chosen_user, df_code)
-
 
 def choose_data():
     v_choice = False
@@ -366,28 +364,6 @@ def train_test_split(df, user):
     res_test = pd.concat(parts_test)
 
     return res_train, res_test
-
-
-def go_again(full_df, train, test, chosen_user, code):
-    valid = False
-    while not valid:
-        yn = input("Select a different method? [Y/N]: ")
-        if yn.upper() == "Y":
-            valid = True
-            print()
-            select_method(full_df, train, test, chosen_user, code)
-        elif yn.upper() == "N":
-            valid = True
-
-    valid2 = False
-    while not valid2:
-        yn = input("Choose different dataset? [Y/N]: ")
-        if yn.upper() == "Y":
-            valid2 = True
-            print()
-            main()
-        elif yn.upper() == "N":
-            valid2 = True
 
 
 def output_results():
