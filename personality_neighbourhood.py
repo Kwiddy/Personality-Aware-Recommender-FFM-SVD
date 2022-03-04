@@ -5,6 +5,7 @@ from sklearn.metrics import mean_squared_error
 from tqdm import tqdm
 import random
 tqdm.pandas()
+random.seed(42)
 
 
 def get_rmse(ext, agr, con, neu, ope, target):
