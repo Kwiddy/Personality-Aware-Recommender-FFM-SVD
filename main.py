@@ -1,5 +1,5 @@
 from reviewAPR import review_APR
-from dataLoader import getDF, reduceDF
+from dataLoader import getDF, reduceDF, find_chosen
 from svd import create_svd
 from svd2 import create_svd_2
 from lgbmRegressor import create_lightgbm
@@ -19,16 +19,20 @@ def main():
 
     retrieved_df = getDF(file_path, parent_path, ext)
 
-    full_df, chosen_user = reduceDF(retrieved_df, df_code)
+    chosen_user = find_chosen(retrieved_df, df_code)
+    print("Chosen users: ", chosen_user)
 
-    print("Chosen user: ", chosen_user)
+    for chosen in chosen_user:
+        full_df = reduceDF(retrieved_df, df_code, chosen)
 
-    # ffm_df = review_APR(full_df, parent_path, ext)
+        # ffm_df = review_APR(full_df, parent_path, ext)
 
-    # take a test split for the chosen_user 
-    train, test = train_test_split(full_df, chosen_user)
+        # take a test split for the chosen_user
+        train, test = train_test_split(full_df, chosen_user)
 
-    select_method(full_df, train, test, chosen_user, df_code)
+        select_method(full_df, train, test, chosen, df_code)
+
+    go_again(full_df, train, test, chosen_user, df_code)
 
 
 def choose_data():
@@ -270,8 +274,6 @@ def select_method(full_df, train, test, chosen_user, code):
             valid2 = True
         else:
             print("Invalid input")
-
-    go_again(full_df, train, test, chosen_user, code)
 
 
 def train_test_split(df, user):
