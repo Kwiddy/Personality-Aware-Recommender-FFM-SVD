@@ -21,12 +21,14 @@ dp_round = None
 restrict_reviews = None
 limit = None
 limit_method = None
+sub_limit_method = None
 g_results = []
 g_all = False
 
 def main():
     global restrict_reviews
     global limit_method
+    global sub_limit_method
     global limit
 
     file_path, parent_path, ext, df_code = choose_data()
@@ -37,9 +39,10 @@ def main():
     print("Chosen users: ", chosen_user)
 
     for chosen in chosen_user:
-        full_df, rr, lm, lim = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit)
+        full_df, rr, lm, lim, slm = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method)
         restrict_reviews = rr
         limit_method = lm
+        sub_limit_method = slm
         limit = lim
 
         # ffm_df = review_APR(full_df, parent_path, ext)
@@ -162,6 +165,7 @@ def select_method(full_df, train, test, chosen_user, code):
                                 method_choice = method
                                 valid_in = True
                                 recommendations_df, dp_result = approach1(equal, train, chosen_user, False, code, True, dp_round)
+                                print(recommendations_df)
                                 dp_round = dp_result
                                 m_name = "6-SVD"
                                 m_choice = 3

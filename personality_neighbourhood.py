@@ -3,6 +3,7 @@ import math
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from tqdm import tqdm
+import random
 tqdm.pandas()
 
 
@@ -60,7 +61,7 @@ def find_neighbours(id, df_code):
     return sims_df
 
 
-def get_neighbourhood(user, df_code):
+def get_neighbourhood(user, df_code, stratified):
     # happy = False
     # sims_df = find_neighbours(user, df_code)
     # while not happy:
@@ -92,8 +93,42 @@ def get_neighbourhood(user, df_code):
     # threshold = float(input("Enter a threshold value (e.g. 0.3): "))
     # df = sims_df[sims_df['diff'] <= threshold]
 
-    # get top 5% of most similar users
-    df = sims_df.nsmallest((int(sims_df[sims_df.columns[0]].count() / 100) * 5), 'diff')
+    if not stratified:
+        # get top 5% of most similar users
+        df = sims_df.nsmallest((int(sims_df[sims_df.columns[0]].count() / 100) * 5), 'diff')
+    else:
+        # get percentage size of the dataframe
+        target_size = int(sims_df[sims_df.columns[0]].count() / 100) * 5
+
+        # 1/2 total within nearest bracket, 1/4 total in both sides of next bracket, 1/8 total in both sides of next...
+        divisions = math.floor(math.log(target_size, 2))
+        chosen = [user]
+        i = 0
+        max_diff = sims_df["diff"].max()
+        min_diff = sims_df["diff"].min()
+        for i in range(divisions):
+            bracket_max = (i + 1) * ((max_diff - min_diff) / divisions)
+            bracket_min = i * ((max_diff - min_diff) / divisions)
+            # print("max: ", max_diff)
+            # print("min: ", min_diff)
+            # print("brack_max: ", bracket_max)
+            # print("brack_min: ", bracket_min)
+            bracket_df = sims_df.loc[((sims_df["diff"] >= bracket_min) & (sims_df["diff"] <= bracket_max))].copy()
+            # print(bracket_df)
+            required_size = math.floor(target_size / 2**(i+1))
+            ids = bracket_df["reviewerID"].tolist()
+            if required_size >= len(ids):
+                for item in ids:
+                    chosen.append(item)
+            else:
+                selected = random.sample(ids, required_size)
+                for item in selected:
+                    chosen.append(item)
+            # print(bracket_df)
+            # print(required_size)
+            # print()
+
+        df = sims_df.loc[sims_df["reviewerID"].isin(chosen)]
     return df
 
 

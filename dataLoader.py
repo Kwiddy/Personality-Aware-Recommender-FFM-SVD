@@ -27,7 +27,7 @@ def getDF(path, parent_path, extension):
     return df
 
 
-def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
+def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method):
     valid = False
     while not valid:
         if limit is not None:
@@ -53,11 +53,16 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
 
                     valid4 = False
                     while not valid4:
-                        yn4 = input("Stratified or Random? [S/R]: ")
+                        if sub_limit_method is not None:
+                            yn4 = sub_limit_method
+                        else:
+                            yn4 = input("Stratified or Random? [S/R]: ")
                         if yn4.upper() == "S":
+                            sub_limit_method = yn4
                             valid4 = True
                             reduced_df = stratified_sampling(n, df, chosen)
                         elif yn4.upper() == "R":
+                            sub_limit_method = yn4
                             valid4 = True
                             frequents = df['reviewerID'].value_counts()[:n].index.tolist()
                             frequents.append(chosen)
@@ -69,10 +74,31 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
                     print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
                     valid3 = True
                     limit_method = yn3
-                    neighbours_df = get_neighbourhood(chosen, df_code)
-                    neighbours = neighbours_df["reviewerID"].unique()
-                    reduced_df = df[df['reviewerID'].isin(neighbours)]
-
+                    valid5 = False
+                    while not valid5:
+                        if sub_limit_method is not None:
+                            yn5 = sub_limit_method
+                        else:
+                            print("[N] Neighbourhood")
+                            # print("[L] Linear Stratified")
+                            print("[S] Logarithmic Stratified")
+                            yn5 = input("Please select an option above: ")
+                        if yn5.upper() == "S":
+                            sub_limit_method = yn5
+                            valid5 = True
+                            stratified = True
+                            neighbours_df = get_neighbourhood(chosen, df_code, stratified)
+                            neighbours = neighbours_df["reviewerID"].unique()
+                            reduced_df = df[df['reviewerID'].isin(neighbours)]
+                        elif yn5.upper() == "N":
+                            sub_limit_method = yn5
+                            valid5 = True
+                            stratified = False
+                            neighbours_df = get_neighbourhood(chosen, df_code, stratified)
+                            neighbours = neighbours_df["reviewerID"].unique()
+                            reduced_df = df[df['reviewerID'].isin(neighbours)]
+                        else:
+                            print("Invalid input")
                 else:
                     print("Invalid input, please enter a 'P' or an 'A'")
 
@@ -90,18 +116,18 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
                     reduced2_df = reduced_df.groupby('reviewerID').head(k).reset_index(drop=True)
                     reduced2_df.to_csv("reduced.csv")
                     print("total reviews: ", reduced2_df[reduced2_df.columns[0]].count())
-                    return reduced2_df, restrict_reviews, limit_method, limit
+                    return reduced2_df, restrict_reviews, limit_method, limit, sub_limit_method
 
                 elif yn2.upper() == "N":
                     valid2 = True
                     restrict_reviews = yn2
                     print("total reviews: ", reduced_df[reduced_df.columns[0]].count())
-                    return reduced_df, restrict_reviews, limit_method, limit
+                    return reduced_df, restrict_reviews, limit_method, limit, sub_limit_method
 
         elif yn.upper() == "N":
             valid = True
             limit = yn
-            return df, restrict_reviews, limit_method, limit
+            return df, restrict_reviews, limit_method, limit, sub_limit_method
 
 
 def stratified_sampling(n, df, chosen):
