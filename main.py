@@ -219,7 +219,6 @@ def select_method(full_df, train, test, chosen_user, code):
                     # results = [LightGBM, RF, SVD, SVD++]
                     results = []
 
-                    print("dp_round: ", dp_round)
                     if dp_round is not None:
                         dp = dp_round
                     else:
@@ -245,17 +244,17 @@ def select_method(full_df, train, test, chosen_user, code):
                          2])
                     print("Personality 6-SVD...")
                     results.append(
-                        ["6-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp), 3])
+                        ["6-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp)[0], 3])
                     results.append(
-                        ["6-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp), 3])
+                        ["6-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp)[0], 3])
                     print("Non-Personality SVD...")
                     results.append(["SVD", False, False, create_svd_2(full_df, train, chosen_user, 0), 5])
                     results.append(["SVD", False, True, create_svd_2(full_df, train, chosen_user, 0), 5])
                     print("Personality 6-SVD++...")
                     results.append(
-                        ["6-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp), 4])
+                        ["6-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp)[0], 4])
                     results.append(
-                        ["6-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp), 4])
+                        ["6-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp)[0], 4])
                     print("Non-Personality SVD++...")
                     results.append(["SVD++", False, False, create_svd_2(full_df, train, chosen_user, 1), 5])
                     results.append(["SVD++", False, True, create_svd_2(equal, train, chosen_user, 1), 5])
@@ -288,7 +287,6 @@ def select_method(full_df, train, test, chosen_user, code):
                 formatted_df = result_df.copy()
                 formatted_df = formatted_df.set_index("Model")
 
-                # M D K V
                 if code == "M":
                     prefix = "Movies"
                 elif code == "D":
