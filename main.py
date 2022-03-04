@@ -116,8 +116,8 @@ def select_method(full_df, train, test, chosen_user, code):
             choice = model_analysis
         else:
             choice = input("Model or Analysis? [M/A]: ")
-            model_analysis = choice
         if choice.upper() == "M":
+            model_analysis = choice
             valid2 = True
             valid = False
             while not valid:
@@ -125,8 +125,8 @@ def select_method(full_df, train, test, chosen_user, code):
                     yn = pers_yes
                 else:
                     yn = input("Include personality in model / Do All? [Y/N/A]: ")
-                    pers_yes = yn
                 if yn.upper() == "Y":
+                    pers_yes = yn
                     print("Using Personality....")
                     valid = True
                     valid_in = False
@@ -142,8 +142,8 @@ def select_method(full_df, train, test, chosen_user, code):
                                 method = method_choice
                             else:
                                 method = input("Please choose a method above: ")
-                                method_choice = method
                             if method.upper() == "L":
+                                method_choice = method
                                 valid_in = True
                                 recommendations_df = create_lightgbm(equal, train, chosen_user, "L", code, True)
                                 m_name = "LightGBM"
@@ -151,6 +151,7 @@ def select_method(full_df, train, test, chosen_user, code):
                                 b_type = True
                                 m_choice = 1
                             elif method.upper() == "R":
+                                method_choice = method
                                 valid_in = True
                                 recommendations_df = create_lightgbm(equal, train, chosen_user, "R", code, True)
                                 m_name = "RandomForest"
@@ -158,6 +159,7 @@ def select_method(full_df, train, test, chosen_user, code):
                                 p_type = True
                                 b_type = True
                             elif method.upper() == "S":
+                                method_choice = method
                                 valid_in = True
                                 recommendations_df, dp_result = approach1(equal, train, chosen_user, False, code, True, dp_round)
                                 dp_round = dp_result
@@ -166,6 +168,7 @@ def select_method(full_df, train, test, chosen_user, code):
                                 p_type = True
                                 b_type = True
                             elif method.upper() == "P":
+                                method_choice = method
                                 valid_in = True
                                 recommendations_df, dp_result = approach1(equal, train, chosen_user, True, code, True, dp_round)
                                 dp_round = dp_result
@@ -174,6 +177,7 @@ def select_method(full_df, train, test, chosen_user, code):
                                 b_type = True
                                 m_choice = 4
                             elif method.upper() == "N":
+                                method_choice = method
                                 valid_in = True
                                 m_choice = 6
                                 recommendations_df = baseline_nn(equal, train, chosen_user, code, True)
@@ -182,6 +186,7 @@ def select_method(full_df, train, test, chosen_user, code):
                                 b_type = True
                 elif yn.upper() == "N":
                     valid = True
+                    pers_yes = yn
                     # choose method
                     print("")
                     if method_choice is None:
@@ -195,8 +200,8 @@ def select_method(full_df, train, test, chosen_user, code):
                             method = method_choice
                         else:
                             method = input("Please choose a method above: ")
-                            method_choice = method
                         if method.upper() == "S":
+                            method_choice = method
                             valid_in = True
                             # recommendations = create_svd(full_df, ffm_df, chosen_user)
                             recommendations_df = create_svd(full_df, train, chosen_user)
@@ -204,6 +209,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             p_type = False
                             b_type = False
                         if method.upper() == "T":
+                            method_choice = method
                             valid_in = True
                             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
                             recommendations_df = create_svd_2(full_df, train, chosen_user, 0)
@@ -212,6 +218,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             b_type = False
                             m_choice = 5
                         if method.upper() == "P":
+                            method_choice = method
                             valid_in = True
                             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
                             recommendations_df = create_svd_2(full_df, train, chosen_user, 1)
@@ -222,6 +229,7 @@ def select_method(full_df, train, test, chosen_user, code):
 
                 elif yn.upper() == "A":
                     valid = True
+                    pers_yes = yn
                     g_all = True
                     # results = [LightGBM, RF, SVD, SVD++]
                     results = []
@@ -323,6 +331,7 @@ def select_method(full_df, train, test, chosen_user, code):
 
         elif choice.upper() == "A":
             # exploratory_analysis(full_df)
+            model_analysis = choice
             exploratory_analysis(equal)
             valid2 = True
         else:

@@ -34,19 +34,19 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
             yn = limit
         else:
             yn = input("Limit number of users? [Y/N] (Recommended): ")
-            limit = yn
         if yn.upper() == "Y":
             valid = True
+            limit = yn
             valid3 = False
             while not valid3:
                 if limit_method is not None:
                     yn3 = limit_method
                 else:
                     yn3 = input("Limit by personality or absolute distribution value? [P/A]: ")
-                    limit_method = yn3
-                print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
                 if yn3.upper() == "A":
+                    print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
                     valid3 = True
+                    limit_method = yn3
                     # get n most common reviewers
                     n = int(input("Enter a number: "))
                     print("Number of reviewers: ", n)
@@ -66,7 +66,9 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
                             print("Invalid input - Please enter an 'S' or an 'A'")
 
                 elif yn3.upper() == "P":
+                    print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
                     valid3 = True
+                    limit_method = yn3
                     neighbours_df = get_neighbourhood(chosen, df_code)
                     neighbours = neighbours_df["reviewerID"].unique()
                     reduced_df = df[df['reviewerID'].isin(neighbours)]
@@ -80,8 +82,8 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
                     yn2 = restrict_reviews
                 else:
                     yn2 = input("Restrict number of reviews per user? [Y/N]: ")
-                    restrict_reviews = yn2
                 if yn2.upper() == "Y":
+                    restrict_reviews = yn2
                     valid2 = True
                     k = 50
                     print("Reviews per user: ", k)
@@ -92,11 +94,13 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit):
 
                 elif yn2.upper() == "N":
                     valid2 = True
+                    restrict_reviews = yn2
                     print("total reviews: ", reduced_df[reduced_df.columns[0]].count())
-                    return reduced_df,restrict_reviews, limit_method, limit
+                    return reduced_df, restrict_reviews, limit_method, limit
 
         elif yn.upper() == "N":
             valid = True
+            limit = yn
             return df, restrict_reviews, limit_method, limit
 
 
