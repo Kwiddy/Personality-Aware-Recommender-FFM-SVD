@@ -8,8 +8,6 @@ from collections import Counter
 from sklearn import preprocessing
 import numpy as np
 
-# NEED TO CHANGE SO THAT IT OPERATES ON EVERY USER
-
 # See LIWC_FFM_CORRELATIONS.xlsx for references
 liwc_to_ffm = {
     "pronoun": [0.06, 0.06, -0.21, 0.11, -0.02],
@@ -88,9 +86,7 @@ def tokenize(text):
 
 
 # This function is derived from https://github.com/chbrown/liwc-python
-# THIS IS ONLY LIWC2007, NEEDS TO BE UPDATED IF POSSIBLE
 def calc_liwc(corpus):
-    # parse, category_names = liwc.load_token_parser('./LIWC/LIWC2007_English100131.dic')
     parse, category_names = liwc.load_token_parser('./LIWC/LIWC2015_Dictionary.dic')
     tokens = tokenize(corpus)
     counts = Counter(category for token in tokens for category in parse(token))
