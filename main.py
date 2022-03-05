@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 from DLRegression import baseline_nn
+from os.path import exists
 
 # Initialise globals
 pers_yes = None
@@ -24,6 +25,7 @@ limit_method = None
 sub_limit_method = None
 g_results = []
 g_all = False
+
 
 def main():
     global restrict_reviews
@@ -39,13 +41,24 @@ def main():
     print("Chosen users: ", chosen_user)
 
     for chosen in chosen_user:
-        full_df, rr, lm, lim, slm = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method)
-        restrict_reviews = rr
-        limit_method = lm
-        sub_limit_method = slm
-        limit = lim
+        personality_path = parent_path + ext[:-4] + "_personality.csv"
 
-        # ffm_df = review_APR(full_df, parent_path, ext)
+        if exists(personality_path):
+            first_time = False
+            full_df, rr, lm, lim, slm = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
+                                                 sub_limit_method, first_time)
+            restrict_reviews = rr
+            limit_method = lm
+            sub_limit_method = slm
+            limit = lim
+
+        else:
+            first_time = True
+            full_df, rr, lm, lim, slm = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
+                                                 sub_limit_method, first_time)
+            ffm_df = review_APR(full_df, parent_path, ext)
+            print("New dataset personalities computed - Please rerun the program")
+            exit()
 
         # take a test split for the chosen_user
         train, test = train_test_split(full_df, chosen_user)
@@ -61,6 +74,10 @@ def choose_data():
     print("[D] - Digital Music")
     print("[K] - Kindle Store")
     print("[V] - Video Games")
+    print("[P] - Pet Supplies")
+    print("[G] - Patio, Lawn, & Garden")
+    print("[S] - Sports & Outdoors")
+    print("[C] - Music (CDs & Vinyl)")
     while not v_choice:
         choice = input("Please enter one of the datasets above: ")
         if choice.upper() == "M":
@@ -83,6 +100,26 @@ def choose_data():
             extension = "Video_Games_5.csv"
             v_choice = True
             df_code = "V"
+        elif choice.upper() == "P":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Pet_Supplies_5.json.gz'
+            extension = "Pet_Supplies_5.csv"
+            v_choice = True
+            df_code = "P"
+        elif choice.upper() == "G":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Patio_Lawn_and_Garden_5.json.gz'
+            extension = "Patio_Lawn_and_Garden_5.csv"
+            v_choice = True
+            df_code = "G"
+        elif choice.upper() == "S":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Sports_and_Outdoors_5.json.gz'
+            extension = "Sports_and_Outdoors_5.csv"
+            v_choice = True
+            df_code = "S"
+        elif choice.upper() == "C":
+            file_path = './Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5.json.gz'
+            extension = "CDs_and_Vinyl_5.csv"
+            v_choice = True
+            df_code = "C"
 
     new_path = [char for char in file_path]
     i = -1
@@ -314,6 +351,14 @@ def select_method(full_df, train, test, chosen_user, code):
                     prefix = "Kindle"
                 elif code == "V":
                     prefix = "Video_Games"
+                elif code == "P":
+                    prefix = "Pet_Supplies"
+                elif code == "G":
+                    prefix = "Patio_Lawn_Garden"
+                elif code == "S":
+                    prefix = "Sports_and_Outdoors"
+                elif code == "C":
+                    prefix = "CDs_and_Vinyl"
                 formatted_df.to_csv("saved_results/" + prefix + "_results.csv")
                 print(formatted_df)
 

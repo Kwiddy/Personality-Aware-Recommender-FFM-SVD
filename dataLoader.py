@@ -27,13 +27,16 @@ def getDF(path, parent_path, extension):
     return df
 
 
-def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method):
+def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method, first_time):
     valid = False
     while not valid:
-        if limit is not None:
-            yn = limit
+        if first_time:
+            yn = "N"
         else:
-            yn = input("Limit number of users? [Y/N] (Recommended): ")
+            if limit is not None:
+                yn = limit
+            else:
+                yn = input("Limit number of users? [Y/N] (Recommended): ")
         if yn.upper() == "Y":
             valid = True
             limit = yn

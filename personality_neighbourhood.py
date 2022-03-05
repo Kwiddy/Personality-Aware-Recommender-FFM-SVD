@@ -24,6 +24,14 @@ def find_neighbours(id, df_code):
         path = "./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Video_Games_5_personality.csv"
     elif df_code.upper() == "D":
         path = "./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Digital_Music_5_personality.csv"
+    elif df_code.upper() == "P":
+        path = "./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Pet_Supplies_5_personality.csv"
+    elif df_code.upper() == "G":
+        path = "./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Patio_Lawn_and_Garden_5_personality.csv"
+    elif df_code.upper() == "S":
+        path = "./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Sports_and_Outdoors_5_personality.csv"
+    elif df_code.upper() == "C":
+        path = "./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5_personality.csv"
 
     personalities_df = pd.read_csv(path)
 
