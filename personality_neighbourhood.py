@@ -115,10 +115,10 @@ def get_neighbourhood(user, df_code, stratified):
         # 1/2 total within nearest bracket, 1/4 total in both sides of next bracket, 1/8 total in both sides of next...
         divisions = math.floor(math.log(target_size, 2))
         chosen = [user]
-        i = 0
+        added = 0
         max_diff = sims_df["diff"].max()
         min_diff = sims_df["diff"].min()
-        for i in range(divisions):
+        for i in range(1, divisions):
             bracket_max = (i + 1) * ((max_diff - min_diff) / divisions)
             bracket_min = i * ((max_diff - min_diff) / divisions)
             # print("max: ", max_diff)
@@ -132,13 +132,33 @@ def get_neighbourhood(user, df_code, stratified):
             if required_size >= len(ids):
                 for item in ids:
                     chosen.append(item)
+                    added += 1
             else:
                 selected = random.sample(ids, required_size)
                 for item in selected:
                     chosen.append(item)
+                    added += 1
             # print(bracket_df)
             # print(required_size)
             # print()
+        i = 0
+        bracket_max = (i + 1) * ((max_diff - min_diff) / divisions)
+        bracket_min = i * ((max_diff - min_diff) / divisions)
+        # print("max: ", max_diff)
+        # print("min: ", min_diff)
+        # print("brack_max: ", bracket_max)
+        # print("brack_min: ", bracket_min)
+        bracket_df = sims_df.loc[((sims_df["diff"] >= bracket_min) & (sims_df["diff"] <= bracket_max))].copy()
+        # print(bracket_df)
+        required_size = target_size - added - 1 # to make sure the correct number of users are added
+        ids = bracket_df["reviewerID"].tolist()
+        if required_size >= len(ids):
+            for item in ids:
+                chosen.append(item)
+        else:
+            selected = random.sample(ids, required_size)
+            for item in selected:
+                chosen.append(item)
 
         df = sims_df.loc[sims_df["reviewerID"].isin(chosen)]
         print(str(df[df.columns[0]].count()) + " users chosen")
