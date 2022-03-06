@@ -97,14 +97,22 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                         else:
                             print()
                             print("[N] Neighbourhood")
-                            # print("[L] Linear Stratified")
+                            print("[L] Linear Stratified")
                             print("[S] Logarithmic Stratified")
                             yn5 = input("Please select an option above: ")
                         if yn5.upper() == "S":
                             sub_limit_method = yn5
                             valid5 = True
                             stratified = True
-                            neighbours_df = get_neighbourhood(chosen, df_code, stratified)
+                            neighbours_df = get_neighbourhood(chosen, df_code, stratified, 0) # 0 = log
+                            neighbours = neighbours_df["reviewerID"].unique()
+                            print(len(neighbours), " chosen")
+                            reduced_df = df[df['reviewerID'].isin(neighbours)]
+                        elif yn5.upper() == "L":
+                            sub_limit_method = yn5
+                            valid5 = True
+                            stratified = True
+                            neighbours_df = get_neighbourhood(chosen, df_code, stratified, 1) # 1 = lin
                             neighbours = neighbours_df["reviewerID"].unique()
                             print(len(neighbours), " chosen")
                             reduced_df = df[df['reviewerID'].isin(neighbours)]
@@ -112,7 +120,7 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                             sub_limit_method = yn5
                             valid5 = True
                             stratified = False
-                            neighbours_df = get_neighbourhood(chosen, df_code, stratified)
+                            neighbours_df = get_neighbourhood(chosen, df_code, stratified, None)
                             neighbours = neighbours_df["reviewerID"].unique()
                             print(len(neighbours), " chosen")
                             reduced_df = df[df['reviewerID'].isin(neighbours)]
@@ -201,6 +209,7 @@ def stratified_sampling(n, df, chosen, code):
             ids.append(item)
         for item in smallest:
             ids.append(item)
+        personalities = personalities[~personalities['reviewerID'].isin(ids)]
 
     ids.append(chosen)
     print(len(ids))
