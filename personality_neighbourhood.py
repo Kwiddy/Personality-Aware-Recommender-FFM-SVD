@@ -71,7 +71,8 @@ def find_neighbours(id, df_code):
     return sims_df
 
 
-def get_neighbourhood(user, df_code, stratified):
+# log_lin 0 = log, log_lin 1 = lin
+def get_neighbourhood(user, df_code, stratified, log_lin):
     # happy = False
     # sims_df = find_neighbours(user, df_code)
     # while not happy:
@@ -127,7 +128,14 @@ def get_neighbourhood(user, df_code, stratified):
             # print("brack_min: ", bracket_min)
             bracket_df = sims_df.loc[((sims_df["diff"] >= bracket_min) & (sims_df["diff"] <= bracket_max))].copy()
             # print(bracket_df)
-            required_size = math.floor(target_size / 2**(i+1))
+
+            if log_lin == 0:
+                # log bracket
+                required_size = math.floor(target_size / 2**(i+1))
+            else:
+                # lin bracket
+                required_size = math.floor(target_size / divisions)
+
             ids = bracket_df["reviewerID"].tolist()
             if required_size >= len(ids):
                 for item in ids:
