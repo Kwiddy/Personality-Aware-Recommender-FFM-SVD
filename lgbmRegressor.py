@@ -13,7 +13,7 @@ def translate(val, dic):
 def pre_process(df, asin_convert):
     df = df.drop(
         columns=["Unnamed: 0_x", "Unnamed: 0_y", "verified", "reviewTime", "style", "image", "reviewerName",
-                 "reviewText", "summary", "vote"])
+                 "reviewText", "summary", "vote", "unixReviewTime"])
     df = df.drop(columns=["reviewerID"])
 
     df["asin"] = df.progress_apply(lambda x: translate(x.asin, asin_convert), axis=1)
@@ -126,7 +126,7 @@ def create_lightgbm(full_df, train, chosen_user, model_choice, code, disp):
 
     result = x_target.copy()
     result["predictions"] = predictions
-    result = result.drop(columns=["unixReviewTime", "Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"])
+    result = result.drop(columns=["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"])
     result = result.sort_values(by=['predictions'], ascending=False)
 
     result["asin"] = result.progress_apply(lambda j: translate(j.asin, reverse_asin_convert), axis=1)
