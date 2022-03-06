@@ -1,12 +1,16 @@
 import pandas as pd 
 import gzip
 import json
+import math
+import random
 from tqdm import tqdm
 from os.path import exists
 from personality_neighbourhood import get_neighbourhood
 from sklearn.metrics import mean_squared_error
 import numpy as np
 import pickle
+
+random.seed(42)
 
 
 def getDF(path, parent_path, extension):
@@ -45,13 +49,20 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                 if limit_method is not None:
                     yn3 = limit_method
                 else:
-                    yn3 = input("Limit by personality or absolute distribution value? [P/A]: ")
-                if yn3.upper() == "A":
+                    yn3 = input("Personal or Non-Personal Refinement? [P/N]: ")
+                if yn3.upper() == "N":
                     print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
+                    print(str(df['reviewerID'].nunique()))
                     valid3 = True
                     limit_method = yn3
                     # get n most common reviewers
-                    n = int(input("Enter a number: "))
+                    valid6 = False
+                    while not valid6:
+                        try:
+                            n = int(input("Enter a number of reviewers (Recommended 5% = " + str(int(df['reviewerID'].nunique() / 100) * 5) + "): "))
+                            valid6 = True
+                        except:
+                            print("Invalid input")
                     print("Number of reviewers: ", n)
 
                     valid4 = False
@@ -59,17 +70,19 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                         if sub_limit_method is not None:
                             yn4 = sub_limit_method
                         else:
-                            yn4 = input("Stratified or Random? [S/R]: ")
+                            yn4 = input("Stratified, Most Common, or Random? [S/M/R]: ")
                         if yn4.upper() == "S":
                             sub_limit_method = yn4
                             valid4 = True
-                            reduced_df = stratified_sampling(n, df, chosen)
+                            reduced_df = stratified_sampling(n, df, chosen, df_code)
+                        elif yn4.upper() == "M":
+                            sub_limit_method = yn4
+                            valid4 = True
+                            reduced_df = most_common(n, df, chosen)
                         elif yn4.upper() == "R":
                             sub_limit_method = yn4
                             valid4 = True
-                            frequents = df['reviewerID'].value_counts()[:n].index.tolist()
-                            frequents.append(chosen)
-                            reduced_df = df[df['reviewerID'].isin(frequents)]
+                            reduced_df = select_random(n, df, chosen)
                         else:
                             print("Invalid input - Please enter an 'S' or an 'A'")
 
@@ -93,6 +106,7 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                             stratified = True
                             neighbours_df = get_neighbourhood(chosen, df_code, stratified)
                             neighbours = neighbours_df["reviewerID"].unique()
+                            print(len(neighbours), " chosen")
                             reduced_df = df[df['reviewerID'].isin(neighbours)]
                         elif yn5.upper() == "N":
                             sub_limit_method = yn5
@@ -100,6 +114,7 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                             stratified = False
                             neighbours_df = get_neighbourhood(chosen, df_code, stratified)
                             neighbours = neighbours_df["reviewerID"].unique()
+                            print(len(neighbours), " chosen")
                             reduced_df = df[df['reviewerID'].isin(neighbours)]
                         else:
                             print("Invalid input")
@@ -134,42 +149,114 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
             return df, restrict_reviews, limit_method, limit, sub_limit_method
 
 
-def stratified_sampling(n, df, chosen):
+def stratified_sampling(n, df, chosen, code):
     print("Conducting Stratified Sampling...")
-    k = n/5
+    k = math.floor(n/5)
+    remainder = n % 5
+    print("k: ", k)
+    print("remainder: ", remainder)
     steps = 1/(k-1)
     new_df = pd.DataFrame()
 
-    personalities = pd.read_csv(
-        "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
-
-    saved_df = df.copy()
-    df = df.merge(personalities, on="reviewerID")
-
-    new_df = df.copy()[0:0]
+    if code.upper() == "K":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
+    elif code.upper() == "M":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movie_and_TV_5_personality.csv")
+    elif code.upper() == "V":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Video_Games_5_personality.csv")
+    elif code.upper() == "D":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Digital_Music_5_personality.csv")
+    elif code.upper() == "P":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Pet_Supplies_5_personality.csv")
+    elif code.upper() == "G":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Patio_Lawn_and_Garden_5_personality.csv")
+    elif code.upper() == "S":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Sports_and_Outdoors_5_personality.csv")
+    elif code.upper() == "C":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5_personality.csv")
 
     domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
 
-    count = 1
-    for domain in domains:
-        print(str(count) + "/5")
-        count += 1
-        target = 0
-        for i in range(int(k)):
-            row_to_add = df.iloc[(df[domain] - target).abs().argsort()[0]]
-            new_df = new_df.append(row_to_add)
-            target += steps
+    # for each domain, take the k/2 lowest and k/2 highest
+    ids = []
+    for i in range(5):
+        if i == 4:
+            # make sure the chosen id is counted among them
+            k -= 1
+            k += remainder
+        large_num = math.ceil(k/2)
+        small_num = math.floor(k/2)
+        largest = personalities.nlargest(large_num, domains[i])["reviewerID"]
+        smallest = personalities.nsmallest(small_num, domains[i])["reviewerID"]
 
-    new_df.append(new_df)
+        for item in largest:
+            ids.append(item)
+        for item in smallest:
+            ids.append(item)
 
-    # get ids of chosen_users
-    ids = new_df["reviewerID"].unique()
-    ids = np.append(ids, chosen)
+    ids.append(chosen)
+    print(len(ids))
 
-    print("Chosen Stratified Sample")
-    final_sample = saved_df[saved_df['reviewerID'].isin(ids)]
+    reduced_df = df[df['reviewerID'].isin(ids)]
 
-    return final_sample
+    # saved_df = df.copy()
+    # df = df.merge(personalities, on="reviewerID")
+    #
+    # new_df = df.copy()[0:0]
+    #
+    # domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
+    #
+    # count = 1
+    # for domain in domains:
+    #     print(str(count) + "/5")
+    #     count += 1
+    #     target = 0
+    #     for i in range(int(k)):
+    #         row_to_add = df.iloc[(df[domain] - target).abs().argsort()[0]]
+    #         new_df = new_df.append(row_to_add)
+    #         target += steps
+    #
+    # new_df.append(new_df)
+    #
+    # # get ids of chosen_users
+    # ids = new_df["reviewerID"].unique()
+    # ids = np.append(ids, chosen)
+    # print(str(len(ids)) + " chosen users")
+    #
+    # print("Chosen Stratified Sample")
+    # final_sample = saved_df[saved_df['reviewerID'].isin(ids)]
+
+    return reduced_df
+
+
+def most_common(n, df, chosen):
+    frequents = df['reviewerID'].value_counts()[:n-1].index.tolist()
+
+    frequents.append(chosen)
+    print(str(len(frequents)) + " chosen users")
+
+    reduced_df = df[df['reviewerID'].isin(frequents)]
+
+    return reduced_df
+
+
+def select_random(n, df, chosen):
+    all_users = df['reviewerID'].unique().tolist()
+    chosen_users = random.sample(all_users, n-1)
+    chosen_users.append(chosen)
+    print(str(len(chosen_users)) + " chosen users")
+
+    reduced_df = df[df['reviewerID'].isin(chosen_users)]
+
+    return reduced_df
 
 
 def find_chosen(df, code):
@@ -226,16 +313,3 @@ def find_chosen(df, code):
         chosen.append(item[0])
 
     return chosen
-
-    # if code.upper() == "K":
-    #     # kindle
-    #     return "A1CIS4LOWYGZGA"
-    # elif code.upper() == "M":
-    #     # movie
-    #     return "A5TZXWU8AALIC"
-    # elif code.upper() == "V":
-    #     # video games
-    #     return "A2582KMXLK2P06"
-    # elif code.upper() == "D":
-    #     # digital music
-    #     return "A3W4D8XOGLWUN5"

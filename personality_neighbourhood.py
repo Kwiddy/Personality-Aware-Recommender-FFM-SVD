@@ -34,6 +34,7 @@ def find_neighbours(id, df_code):
         path = "./Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5_personality.csv"
 
     personalities_df = pd.read_csv(path)
+    print("personalities_df: ", len(personalities_df))
 
     user_row = personalities_df.loc[personalities_df['reviewerID'] == id]
     u_ext = user_row["Extroversion"].tolist()[0]
@@ -99,12 +100,14 @@ def get_neighbourhood(user, df_code, stratified):
     # return df
 
     sims_df = find_neighbours(user, df_code)
+    print("sims_df: ", sims_df[sims_df.columns[0]].count())
     # threshold = float(input("Enter a threshold value (e.g. 0.3): "))
     # df = sims_df[sims_df['diff'] <= threshold]
 
     if not stratified:
         # get top 5% of most similar users
         df = sims_df.nsmallest((int(sims_df[sims_df.columns[0]].count() / 100) * 5), 'diff')
+        print(str(df[df.columns[0]].count()) + " users chosen")
     else:
         # get percentage size of the dataframe
         target_size = int(sims_df[sims_df.columns[0]].count() / 100) * 5
@@ -138,6 +141,7 @@ def get_neighbourhood(user, df_code, stratified):
             # print()
 
         df = sims_df.loc[sims_df["reviewerID"].isin(chosen)]
+        print(str(df[df.columns[0]].count()) + " users chosen")
     return df
 
 
