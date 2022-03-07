@@ -1,9 +1,14 @@
 import lightgbm as lgb
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.ensemble import RandomForestRegressor
 import sklearn
+import random
+import math
+
+random.seed(42)
 
 
 def translate(val, dic):
@@ -74,6 +79,11 @@ def create_lightgbm(full_df, train, chosen_user, model_choice, code, disp):
 
     neighbourhood = full_df[full_df.reviewerID != chosen_user]
     target = full_df[full_df.reviewerID == chosen_user]
+
+    train_target, test_target = train_test_split(target, test_size=0.3)
+
+    neighbourhood = pd.concat([neighbourhood, train_target])
+    target = test_target.copy()
 
     asins = full_df.asin.unique()
     reverse_asin_convert = {}
