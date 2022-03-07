@@ -294,7 +294,7 @@ def find_chosen(df, code):
             counts = dict(group["overall"].value_counts())
             if sum(counts.values()) > max_count:
                 max_count = sum(counts.values())
-            if sum(counts.values()) > 100:
+            if sum(counts.values()) >= 1:
                 users_ratings[name] = counts
 
         for k, v in tqdm(users_ratings.items()):
