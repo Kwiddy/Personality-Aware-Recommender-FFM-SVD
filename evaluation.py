@@ -21,6 +21,9 @@ def evaluate(df_code, model_name, personality_type, balance_type, results, train
 
     comparison = user_test_relev.join(results)
 
+    # These NaN results will be the train split
+    comparison = comparison.dropna()
+
     result = calc_metrics(df_code, comparison, display, num_features, model_name, personality_type, balance_type)
 
     return result
