@@ -26,6 +26,7 @@ sub_limit_method = None
 g_results = []
 g_all = False
 g_test_split = 0.3
+g_absolute_num = None
 
 
 def main():
@@ -33,6 +34,7 @@ def main():
     global limit_method
     global sub_limit_method
     global limit
+    global g_absolute_num
 
     file_path, parent_path, ext, df_code = choose_data()
 
@@ -46,17 +48,18 @@ def main():
 
         if exists(personality_path):
             first_time = False
-            full_df, rr, lm, lim, slm = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
-                                                 sub_limit_method, first_time)
+            full_df, rr, lm, lim, slm, abs_num = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
+                                                 sub_limit_method, first_time, g_absolute_num)
             restrict_reviews = rr
             limit_method = lm
             sub_limit_method = slm
             limit = lim
+            g_absolute_num = abs_num
 
         else:
             first_time = True
-            full_df, rr, lm, lim, slm = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
-                                                 sub_limit_method, first_time)
+            full_df, rr, lm, lim, slm, abs_num = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
+                                                 sub_limit_method, first_time, g_absolute_num)
             ffm_df = review_APR(full_df, parent_path, ext)
             print("New dataset personalities computed - Please rerun the program")
             exit()
@@ -140,6 +143,7 @@ def select_method(full_df, train, test, chosen_user, code):
     global g_results
     global g_all
     global g_test_split
+    global g_absolute_num
 
     # make an equal number of each case
     equal = full_df.groupby('overall').head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
@@ -148,7 +152,7 @@ def select_method(full_df, train, test, chosen_user, code):
     print("Rating distribution: ", dict(equal["overall"].value_counts()))
 
     # the number of features in each method for adjusted r**2 metric
-    feature_nums = {1: 7, 2: 7, 3: 4, 4: 4, 5: 2, 6: 7}
+    feature_nums = {1: 6, 2: 6, 3: 6, 4: 6, 5: 1, 6: 6}
 
     valid2 = False
     while not valid2:
@@ -290,6 +294,7 @@ def select_method(full_df, train, test, chosen_user, code):
                     print("Personality LightGBM...")
                     results.append(
                         ["LightGBM", True, True, create_lightgbm(equal, train, chosen_user, "L", code, False, g_test_split), 1])
+                    # print(results)
                     # results.append(
                     #     ["LightGBM", True, False, create_lightgbm(full_df, train, chosen_user, "L", code, False, g_test_split), 1])
                     # print("Personality Random Forest...")
@@ -314,9 +319,9 @@ def select_method(full_df, train, test, chosen_user, code):
                     # print("Non-Personality SVD++...")
                     # results.append(["SVD++", False, False, approach1(full_df, train, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
                     # results.append(["SVD++", False, True, approach1(equal, train, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
-                    print("Baseline NeuralNet...")
-                    results.append(
-                        ["Baseline NeuralNet", True, True, baseline_nn(equal, train, chosen_user, code, False, g_test_split), 6])
+                    # print("Baseline NeuralNet...")
+                    # results.append(
+                    #     ["Baseline NeuralNet", True, True, baseline_nn(equal, train, chosen_user, code, False, g_test_split), 6])
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
@@ -326,7 +331,8 @@ def select_method(full_df, train, test, chosen_user, code):
 
                 print()
                 for result in results:
-                    response = evaluate(code, results[0], results[1], results[2], result[3], train, test, chosen_user, False, feature_nums[result[4]])
+                    # print(result)
+                    response = evaluate(code, result[0], result[1], result[2], result[3], train, test, chosen_user, False, feature_nums[result[4]])
                     df_dict["Model"].append(result[0])
                     df_dict["Personality"].append(result[1])
                     df_dict["Ratings-balanced"].append(result[2])
