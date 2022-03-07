@@ -58,25 +58,47 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
     for index, row in rmse_df.iterrows():
         rmse_list[int(row["actual"])-1].append(float(row["RMSE"]))
 
+    # # TODO: REMOVE THIS ITS ONLY TEMPORARY
+    # rmse_list = [[1], [1], [1], [1], [1]]
+
     r2 = r2_score(df["actual"], df["predictions"])
     n = df[df.columns[0]].count() # number of samples
     # k = number of independant variables:
     ar2 = 1 - ((1-r2)*(n-1)/(n-k-1))
 
+    try:
+        rmse_1 = math.sqrt(sum(rmse_list[0]) / len(rmse_list[0]))
+    except:
+        rmse_1 = np.NaN
+    try:
+        rmse_2 = math.sqrt(sum(rmse_list[1]) / len(rmse_list[1]))
+    except:
+        rmse_2 = np.NaN
+    try:
+        rmse_3 = math.sqrt(sum(rmse_list[2]) / len(rmse_list[2]))
+    except:
+        rmse_3 = np.NaN
+    try:
+        rmse_4 = math.sqrt(sum(rmse_list[3]) / len(rmse_list[3]))
+    except:
+        rmse_4 = np.NaN
+    try:
+        rmse_5 = math.sqrt(sum(rmse_list[4]) / len(rmse_list[4]))
+    except:
+        rmse_5 = np.NaN
+
     if disp:
-        print("1 Rating RMSE: ", math.sqrt(sum(rmse_list[0]) / len(rmse_list[0])))
-        print("2 Rating RMSE: ", math.sqrt(sum(rmse_list[1]) / len(rmse_list[1])))
-        print("3 Rating RMSE: ", math.sqrt(sum(rmse_list[2]) / len(rmse_list[2])))
-        print("4 Rating RMSE: ", math.sqrt(sum(rmse_list[3]) / len(rmse_list[3])))
-        print("5 Rating RMSE: ", math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])))
+        print("1 Rating RMSE: ", rmse_1)
+        print("2 Rating RMSE: ", rmse_2)
+        print("3 Rating RMSE: ", rmse_3)
+        print("4 Rating RMSE: ", rmse_4)
+        print("5 Rating RMSE: ", rmse_5)
         print()
         print("Adjusted R2 Score: ", ar2)
         print()
 
     # [1 RMSE, 2 RMSE, 3 RMSE, 4 RMSE, 5 RMSE, rmse]
-    return [math.sqrt(sum(rmse_list[0]) / len(rmse_list[0])), math.sqrt(sum(rmse_list[1]) / len(rmse_list[1])),
-            math.sqrt(sum(rmse_list[2]) / len(rmse_list[2])), math.sqrt(sum(rmse_list[3]) / len(rmse_list[3])),
-            math.sqrt(sum(rmse_list[4]) / len(rmse_list[4])), rmse, ar2, mae, std]
+    return [rmse_1, rmse_2, rmse_3, rmse_4, rmse_5, rmse, ar2, mae, std]
 
 
 def results_graph(df, model_name, personality_type, balance_type, df_code):
