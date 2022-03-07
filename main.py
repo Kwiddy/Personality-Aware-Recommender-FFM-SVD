@@ -199,7 +199,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "S":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df, dp_result = approach1(equal, train, chosen_user, False, code, True, dp_round)
+                                recommendations_df, dp_result = approach1(equal, train, chosen_user, False, code, True, dp_round, True)
                                 print(recommendations_df)
                                 dp_round = dp_result
                                 m_name = "6-SVD"
@@ -209,7 +209,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "P":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df, dp_result = approach1(equal, train, chosen_user, True, code, True, dp_round)
+                                recommendations_df, dp_result = approach1(equal, train, chosen_user, True, code, True, dp_round, True)
                                 dp_round = dp_result
                                 m_name = "6-SVD++"
                                 p_type = True
@@ -243,7 +243,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             method_choice = method
                             valid_in = True
                             # recommendations = create_svd(full_df, ffm_df, chosen_user)
-                            recommendations_df = create_svd(full_df, train, chosen_user)
+                            recommendations_df, dp_result = approach1(full_df, train, chosen_user, False, code, True, dp_round, False)
                             m_name = "SVD"
                             p_type = False
                             b_type = False
@@ -251,7 +251,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             method_choice = method
                             valid_in = True
                             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
-                            recommendations_df = create_svd_2(full_df, train, chosen_user, 0)
+                            recommendations_df, dp_result = approach1(full_df, train, chosen_user, True, code, True, dp_round, False)
                             m_name = "SVD"
                             p_type = False
                             b_type = False
@@ -298,23 +298,23 @@ def select_method(full_df, train, test, chosen_user, code):
                          2])
                     print("Personality 6-SVD...")
                     results.append(
-                        ["6-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp)[0], 3])
-                    results.append(
-                        ["6-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp)[0], 3])
+                        ["6-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp, True)[0], 3])
+                    # results.append(
+                        # ["6-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp, True)[0], 3])
                     print("Non-Personality SVD...")
-                    results.append(["SVD", False, False, create_svd_2(full_df, train, chosen_user, 0), 5])
-                    results.append(["SVD", False, True, create_svd_2(full_df, train, chosen_user, 0), 5])
-                    print("Personality 6-SVD++...")
-                    results.append(
-                        ["6-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp)[0], 4])
-                    results.append(
-                        ["6-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp)[0], 4])
-                    print("Non-Personality SVD++...")
-                    results.append(["SVD++", False, False, create_svd_2(full_df, train, chosen_user, 1), 5])
-                    results.append(["SVD++", False, True, create_svd_2(equal, train, chosen_user, 1), 5])
-                    print("Baseline NeuralNet...")
-                    results.append(
-                        ["Baseline NeuralNet", True, True, baseline_nn(equal, train, chosen_user, code, False), 6])
+                    # results.append(["SVD", False, False, approach1(full_df, train, chosen_user, False, code, False, dp, False)[0], 5])
+                    results.append(["SVD", False, True, approach1(equal, train, chosen_user, False, code, False, dp, False)[0], 5])
+                    # print("Personality 6-SVD++...")
+                    # results.append(
+                    #     ["6-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp, True)[0], 4])
+                    # results.append(
+                        # ["6-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp, True)[0], 4])
+                    # print("Non-Personality SVD++...")
+                    # results.append(["SVD++", False, False, approach1(full_df, train, chosen_user, True, code, False, dp, False)[0], 5])
+                    # results.append(["SVD++", False, True, approach1(equal, train, chosen_user, True, code, False, dp, False)[0], 5])
+                    # print("Baseline NeuralNet...")
+                    # results.append(
+                    #     ["Baseline NeuralNet", True, True, baseline_nn(equal, train, chosen_user, code, False), 6])
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
