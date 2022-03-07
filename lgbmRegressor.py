@@ -26,7 +26,7 @@ def pre_process(df, asin_convert):
     return df
 
 
-def create_lightgbm(full_df, train, chosen_user, model_choice, code, disp):
+def create_lightgbm(full_df, train, chosen_user, model_choice, code, disp, split):
     if code.upper() == "K":
         personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
     elif code.upper() == "M":
@@ -80,7 +80,7 @@ def create_lightgbm(full_df, train, chosen_user, model_choice, code, disp):
     neighbourhood = full_df[full_df.reviewerID != chosen_user]
     target = full_df[full_df.reviewerID == chosen_user]
 
-    train_target, test_target = train_test_split(target, test_size=0.3)
+    train_target, test_target = train_test_split(target, test_size=split, random_state=R)
 
     neighbourhood = pd.concat([neighbourhood, train_target])
     target = test_target.copy()

@@ -10,10 +10,11 @@ from sklearn.model_selection import KFold
 import pandas as pd
 import matplotlib.pyplot as plt
 from lgbmRegressor import translate, pre_process
+from sklearn.model_selection import train_test_split
 
 
 # adapted from tutorial https://machinelearningmastery.com/regression-tutorial-keras-deep-learning-library-python/
-def baseline_nn(full_df, train, chosen_user, code, disp):
+def baseline_nn(full_df, train, chosen_user, code, disp, split):
     if code.upper() == "K":
         personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
     elif code.upper() == "M":
@@ -35,8 +36,15 @@ def baseline_nn(full_df, train, chosen_user, code, disp):
     target_col = "overall"
 
     full_df = full_df.merge(personalities, on="reviewerID")
+
     neighbourhood = full_df[full_df.reviewerID != chosen_user]
     target = full_df[full_df.reviewerID == chosen_user]
+
+    train_target, test_target = train_test_split(target, test_size=split, random_state=R)
+
+    neighbourhood = pd.concat([neighbourhood, train_target])
+    target = test_target.copy()
+
     asins = full_df.asin.unique()
     reverse_asin_convert = {}
     id = 0
@@ -85,7 +93,7 @@ def baseline_nn(full_df, train, chosen_user, code, disp):
 
     result = x_target_save.copy()
     result["predictions"] = predictions
-    result = result.drop(columns=["unixReviewTime", "Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm",
+    result = result.drop(columns=["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm",
                                   "Openness_to_Experience"])
     result = result.sort_values(by=['predictions'], ascending=False)
 
@@ -107,7 +115,7 @@ def baseline_nn(full_df, train, chosen_user, code, disp):
 def baseline_model():
     # create model
     model = Sequential()
-    model.add(Dense(20, input_dim=7, kernel_initializer='normal', activation='relu'))
+    model.add(Dense(20, input_dim=6, kernel_initializer='normal', activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(10, kernel_initializer='normal', activation='relu'))
     model.add(Dropout(0.2))
