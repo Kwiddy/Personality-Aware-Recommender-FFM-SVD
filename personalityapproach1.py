@@ -64,7 +64,8 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp, use_person
     #       remove all NaN from evaluation dataset? (as this would be the training 60% <- CHECK THIS WITH SIZES)
     seen_items = small_df.loc[small_df['reviewerID'] == chosen_user, 'asin'].tolist()
     print("seen items length: ", len(seen_items))
-    test_items = random.sample(seen_items, math.floor(len(seen_items)*split))
+    # test_items = random.sample(seen_items, math.floor(len(seen_items)*split))
+    test_items = random.sample(seen_items, math.ceil(len(seen_items)*split))
     print("test items to remove: ", len(test_items))
     train_items = list(set(seen_items) - set(test_items))
 
@@ -82,13 +83,13 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp, use_person
     data = Dataset.load_from_df(small_df, reader)
 
     # get the list of the ids
-    unique_ids = small_df['asin'].unique()
+    # unique_ids = small_df['asin'].unique()
     # get the list of the ids that the user has rated
-    seen_ids = train.loc[train['reviewerID'] == chosen_user, 'asin']
+    # seen_ids = train.loc[train['reviewerID'] == chosen_user, 'asin']
 
     # remove the rated movies for the recommendations, leaves only the items that the user hasn't seen
     # and then its predicting how much the user would like unseen items?
-    items_to_predict = np.setdiff1d(unique_ids, seen_ids)
+    # items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 
     if plus_bool:
         algo = SVDpp(random_state=R, verbose=True)
