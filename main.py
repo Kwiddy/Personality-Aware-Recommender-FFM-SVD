@@ -331,8 +331,8 @@ def select_method(full_df, train, test, chosen_user, code):
 
                 print()
                 for result in results:
-                    # print(result)
-                    response = evaluate(code, result[0], result[1], result[2], result[3], train, test, chosen_user, False, feature_nums[result[4]])
+                    print(result)
+                    response = evaluate(code, result[0], result[1], result[2], result[3], train, test, chosen_user, False, feature_nums[result[4]], full_df)
                     df_dict["Model"].append(result[0])
                     df_dict["Personality"].append(result[1])
                     df_dict["Ratings-balanced"].append(result[2])
@@ -345,6 +345,7 @@ def select_method(full_df, train, test, chosen_user, code):
                     df_dict["MAE"].append(response[7])
                     df_dict["Adjusted R2"].append(response[6])
                     df_dict["Prediction StD"].append(response[8])
+                    df_dict["Predictions Made"].append(response[9])
                 result_df = pd.DataFrame(df_dict)
                 formatted_df = result_df.copy()
                 formatted_df = formatted_df.set_index("Model")
@@ -374,7 +375,7 @@ def select_method(full_df, train, test, chosen_user, code):
                 for result in results:
                     resultant_dfs.append([result[0], result[3], result[1], result[2]])
 
-                global_eval(result_df, resultant_dfs, test, chosen_user)
+                global_eval(result_df, resultant_dfs, test, chosen_user, full_df)
 
                 print()
 
@@ -442,25 +443,100 @@ def output_results():
 
     else:
         combined_results = pd.concat(g_results)
-        combined_results = combined_results.set_index(["Model", "Personality", "Ratings-balanced"])
-        print(combined_results)
-        print()
-        grouped_df = combined_results.groupby(combined_results.index)
+        combined_saved = combined_results.copy()
+        tallies = {}
+        for index, row in combined_results.iterrows():
+            if row["Model"] not in tallies:
+                tallies[row["Model"]] = row["Predictions Made"]
+            else:
+                tallies[row["Model"]] += row["Predictions Made"]
+        # print(tallies)
+        weighted_avg_dict = {}
+        for index, row in combined_results.iterrows():
+            key = row["Model"] + "-" + str(row["Personality"]) + "-" + str(row["Ratings-balanced"])
+            if key not in weighted_avg_dict:
+                weighted_avg_dict[key] = [row.tolist()]
+            else:
+                temp = weighted_avg_dict[key]
+                temp.append(row.tolist())
+                weighted_avg_dict[key] = temp
+        # print(weighted_avg_dict)
 
-        # average_df = pd.DataFrame(columns=list(g_results[0]))
+        weighted_avg_df = pd.DataFrame(columns=combined_results.columns)
+
+        wms = []
+        # take weighted average of all columns
+        for i in range(3, 12):
+            temp = []
+            for k, v in weighted_avg_dict.items():
+                # v is a list of results (so a list of list)
+                weighted_mean = []
+                # for each result, add the target item the number of times that the prediction has been made
+                for result in v:
+                    for count in range(result[-1]):
+                        weighted_mean.append(result[i])
+                wm = sum(weighted_mean) / len(weighted_mean)
+                temp.append(wm)
+            wms.append(temp)
+
+        # get tallies
+        counts = []
+        for k, v in weighted_avg_dict.items():
+            sum_total = 0
+            for result in v:
+                sum_total += result[-1]
+            counts.append(sum_total)
+
+
+        new_row = {
+            'Model': [v[0][0] for k, v in weighted_avg_dict.items()],
+            'Personality': [v[0][1] for k, v in weighted_avg_dict.items()],
+            'Ratings-balanced': [v[0][2] for k, v in weighted_avg_dict.items()],
+            "RMSE 1": wms[0],
+            "RMSE 2": wms[1],
+            "RMSE 3": wms[2],
+            "RMSE 4": wms[3],
+            "RMSE 5": wms[4],
+            "Overall RMSE": wms[5],
+            "MAE": wms[6],
+            "Adjusted R2": wms[7],
+            "Prediction StD": wms[8],
+            "Predictions Made": counts
+        }
+        # new_row = {"Model": v[0][0], "Personality": v[0][1], "Ratings-balanced": v[0][2], "RMSE 1": v[0][3]}#,
+                   # "RMSE 2": v[0][4], "RMSE 3": v[0][5], "RMSE 4": v[0][6], "RMSE 5": v[0][7], "Overall RMSE": v[0][8],
+                   # "MAE": v[0][9], "Adjusted R2": v[0][11], "Prediction StD": v[0][12], "Predictions Made": v[0][13]}
+        new_row_df = pd.DataFrame(new_row)
+        # print(new_row_df)
+        weighted_avg_df = pd.concat([weighted_avg_df, new_row_df])
+        print(weighted_avg_df)
+        # exit()
+
+        # combined_results = combined_results.set_index(["Model", "Personality", "Ratings-balanced"])
+        # print(combined_results)
+        #
+        # print()
+        # grouped_df = combined_results.groupby(combined_results.index)
+        #
+        # # average_df = pd.DataFrame(columns=list(g_results[0]))
+        # # print(average_df)
+        # average_df = grouped_df.mean()
+        # average_df = average_df.reset_index()
+        # print("average_df")
         # print(average_df)
-        average_df = grouped_df.mean()
-        average_df = average_df.reset_index()
-        # average_df.loc[average_df['Personality'] > 0, 'Personality'] = True
-        # average_df.loc[average_df['Personality'] == 0, 'Personality'] = False
-        # average_df.loc[average_df['Ratings-balanced'] > 0, 'Ratings-balanced'] = True
-        # average_df.loc[average_df['Ratings-balanced'] == 0, 'Ratings-balanced'] = False
-        average_df[['Model', 'Personality', 'Ratings-balanced']] = pd.DataFrame(average_df['index'].tolist(), index=average_df.index)
-        average_df = average_df.drop('index', axis=1)
-        cols = average_df.columns.tolist()
-        cols = cols[-3:] + cols[:-3]
-        average_df = average_df[cols]
-        print(average_df)
+        # # average_df.loc[average_df['Personality'] > 0, 'Personality'] = True
+        # # average_df.loc[average_df['Personality'] == 0, 'Personality'] = False
+        # # average_df.loc[average_df['Ratings-balanced'] > 0, 'Ratings-balanced'] = True
+        # # average_df.loc[average_df['Ratings-balanced'] == 0, 'Ratings-balanced'] = False
+        # average_df[['Model', 'Personality', 'Ratings-balanced']] = pd.DataFrame(average_df['index'].tolist(), index=average_df.index)
+        # # average_df["Predictions Made"] = combined_saved.loc[
+        # #     combined_saved['Model'] == average_df["Model"], 'Predictions Made'].sum()
+        # average_df["Predictions Made"] = average_df["Model"].apply(lambda x: tallies.get(x))
+        # average_df = average_df.drop('index', axis=1)
+        # cols = average_df.columns.tolist()
+        # cols = cols[-3:] + cols[:-3]
+        # average_df = average_df[cols]
+        # print(average_df)
 
 
 
