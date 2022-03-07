@@ -7,10 +7,12 @@ import numpy as np
 import seaborn as sns
 
 
-def evaluate(df_code, model_name, personality_type, balance_type, results, train, test, user, display, num_features):
+def evaluate(df_code, model_name, personality_type, balance_type, results, train, test, user, display, num_features, full_df):
     # get the test split for the chosen user
-    user_test = test.loc[test['reviewerID'] == user]
-    user_test_relev = user_test[["asin", "overall"]].copy()
+    # user_test = test.loc[test['reviewerID'] == user]
+    # user_test_relev = user_test[["asin", "overall"]].copy()
+    user_test = full_df.loc[full_df['reviewerID'] == user]
+    user_test_relev = full_df[["asin", "overall"]].copy()
 
     # rename overall to actual
     user_test_relev = user_test_relev.rename(columns={"overall": "actual"})
@@ -21,18 +23,24 @@ def evaluate(df_code, model_name, personality_type, balance_type, results, train
 
     comparison = user_test_relev.join(results)
 
+    print("comparison")
+    print(comparison)
+
     # These NaN results will be the train split
     comparison = comparison.dropna()
 
-    result = calc_metrics(df_code, comparison, display, num_features, model_name, personality_type, balance_type)
+    predictions_made = len(comparison)
+
+    result = calc_metrics(df_code, comparison, display, num_features, model_name, personality_type, balance_type, predictions_made)
 
     return result
 
 
-def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_type):
+def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_type, predictions_made):
     if disp:
         results_graph(df, model_name, personality_type, balance_type, df_code)
     rmse_df = df.copy()
+    print(df)
     rmse_df["RMSE"] = (df["actual"]-df["predictions"])**2
     rmse_df["AbsError"] = abs(df["actual"]-df["predictions"])
     
@@ -98,7 +106,7 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
         print()
 
     # [1 RMSE, 2 RMSE, 3 RMSE, 4 RMSE, 5 RMSE, rmse]
-    return [rmse_1, rmse_2, rmse_3, rmse_4, rmse_5, rmse, ar2, mae, std]
+    return [rmse_1, rmse_2, rmse_3, rmse_4, rmse_5, rmse, ar2, mae, std, predictions_made]
 
 
 def results_graph(df, model_name, personality_type, balance_type, df_code):
@@ -121,7 +129,7 @@ def results_graph(df, model_name, personality_type, balance_type, df_code):
     fig.savefig("saved_results/" + title + ".png")
 
 
-def global_eval(df, indiv_dfs, test, user):
+def global_eval(df, indiv_dfs, test, user, full_df):
 
     # only keep the best of each approach
     best_idx = df.groupby(['Model'])['Overall RMSE'].transform(min) == df['Overall RMSE']
@@ -252,8 +260,10 @@ def global_eval(df, indiv_dfs, test, user):
                 if item[3]:
                     lbl += " - Ratings-Balanced"
                 resultant_df = item[1]
-                user_test = test.loc[test['reviewerID'] == user]
-                user_test_relev = user_test[["asin", "overall"]].copy()
+                # user_test = test.loc[test['reviewerID'] == user]
+                # user_test_relev = user_test[["asin", "overall"]].copy()
+                user_test = full_df.loc[full_df['reviewerID'] == user]
+                user_test_relev = full_df[["asin", "overall"]].copy()
 
                 # rename overall to actual
                 user_test_relev = user_test_relev.rename(columns={"overall": "actual"})
