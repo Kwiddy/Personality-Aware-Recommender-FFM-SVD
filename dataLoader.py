@@ -31,7 +31,7 @@ def getDF(path, parent_path, extension):
     return df
 
 
-def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method, first_time):
+def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method, first_time, g_abs_num):
     valid = False
     while not valid:
         if first_time:
@@ -58,11 +58,16 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                     # get n most common reviewers
                     valid6 = False
                     while not valid6:
-                        try:
-                            n = int(input("Enter a number of reviewers (Recommended 5% = " + str(int(df['reviewerID'].nunique() / 100) * 5) + "): "))
+                        if g_abs_num is not None:
                             valid6 = True
-                        except:
-                            print("Invalid input")
+                            n = g_abs_num
+                        else:
+                            try:
+                                n = int(input("Enter a number of reviewers (Recommended 5% = " + str(int(df['reviewerID'].nunique() / 100) * 5) + "): "))
+                                valid6 = True
+                                g_abs_num = n
+                            except:
+                                print("Invalid input")
                     print("Number of reviewers: ", n)
 
                     valid4 = False
@@ -143,18 +148,18 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                     reduced2_df = reduced_df.groupby('reviewerID').head(k).reset_index(drop=True)
                     reduced2_df.to_csv("reduced.csv")
                     print("total reviews: ", reduced2_df[reduced2_df.columns[0]].count())
-                    return reduced2_df, restrict_reviews, limit_method, limit, sub_limit_method
+                    return reduced2_df, restrict_reviews, limit_method, limit, sub_limit_method, g_abs_num
 
                 elif yn2.upper() == "N":
                     valid2 = True
                     restrict_reviews = yn2
                     print("total reviews: ", reduced_df[reduced_df.columns[0]].count())
-                    return reduced_df, restrict_reviews, limit_method, limit, sub_limit_method
+                    return reduced_df, restrict_reviews, limit_method, limit, sub_limit_method, g_abs_num
 
         elif yn.upper() == "N":
             valid = True
             limit = yn
-            return df, restrict_reviews, limit_method, limit, sub_limit_method
+            return df, restrict_reviews, limit_method, limit, sub_limit_method, g_abs_num
 
 
 def stratified_sampling(n, df, chosen, code):
@@ -294,6 +299,7 @@ def find_chosen(df, code):
             counts = dict(group["overall"].value_counts())
             if sum(counts.values()) > max_count:
                 max_count = sum(counts.values())
+            # if sum(counts.values()) >= 100:
             if sum(counts.values()) >= 1:
                 users_ratings[name] = counts
 
