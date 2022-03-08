@@ -10,9 +10,11 @@ from personalityapproach1 import approach1
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
+import random
 from collections import defaultdict
 from DLRegression import baseline_nn
 from os.path import exists
+from sklearn.model_selection import train_test_split
 
 # Initialise globals
 pers_yes = None
@@ -28,6 +30,8 @@ g_all = False
 g_test_split = 0.3
 g_absolute_num = None
 
+random.seed(42)
+
 
 def main():
     global restrict_reviews
@@ -35,10 +39,11 @@ def main():
     global sub_limit_method
     global limit
     global g_absolute_num
+    global g_test_split
 
     file_path, parent_path, ext, df_code = choose_data()
 
-    retrieved_df = getDF(file_path, parent_path, ext)
+    retrieved_df, cleaned_df = getDF(file_path, parent_path, ext)
 
     chosen_user = find_chosen(retrieved_df, df_code)
     print("Chosen users: ", chosen_user)
@@ -48,8 +53,11 @@ def main():
 
         if exists(personality_path):
             first_time = False
-            full_df, rr, lm, lim, slm, abs_num = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
-                                                 sub_limit_method, first_time, g_absolute_num)
+            # full_df, rr, lm, lim, slm, abs_num = reduceDF(cleaned_df, df_code, chosen, restrict_reviews, limit_method, limit,
+            #                                      sub_limit_method, first_time, g_absolute_num)
+            full_df, rr, lm, lim, slm, abs_num = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method,
+                                                          limit,
+                                                          sub_limit_method, first_time, g_absolute_num)
             restrict_reviews = rr
             limit_method = lm
             sub_limit_method = slm
@@ -65,7 +73,13 @@ def main():
             exit()
 
         # take a test split for the chosen_user
-        train, test = train_test_split(full_df, chosen_user)
+        # train, test = train_test_split(full_df, chosen_user)
+        user_items = full_df.loc[full_df['reviewerID'] == chosen]
+        user_items = user_items["asin"].unique()
+        print(user_items)
+        train, test = train_test_split(user_items, test_size=g_test_split, random_state=42)
+        print("train: ",train)
+        print("test: ", test)
 
         select_method(full_df, train, test, chosen, df_code)
 
@@ -189,7 +203,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             if method.upper() == "L":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, chosen_user, "L", code, True, g_test_split)
+                                recommendations_df = create_lightgbm(equal, train, test, chosen_user, "L", code, True, g_test_split)
                                 m_name = "LightGBM"
                                 p_type = True
                                 b_type = True
@@ -197,7 +211,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "R":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, chosen_user, "R", code, True, g_test_split)
+                                recommendations_df = create_lightgbm(equal, train, test, chosen_user, "R", code, True, g_test_split)
                                 m_name = "RandomForest"
                                 m_choice = 2
                                 p_type = True
@@ -205,7 +219,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "S":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df, dp_result = approach1(equal, train, chosen_user, False, code, True, dp_round, True, g_test_split)
+                                recommendations_df, dp_result = approach1(equal, train, test, chosen_user, False, code, True, dp_round, True, g_test_split)
                                 print(recommendations_df)
                                 dp_round = dp_result
                                 m_name = "6-SVD"
@@ -215,7 +229,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "P":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df, dp_result = approach1(equal, train, chosen_user, True, code, True, dp_round, True, g_test_split)
+                                recommendations_df, dp_result = approach1(equal, train, test, chosen_user, True, code, True, dp_round, True, g_test_split)
                                 dp_round = dp_result
                                 m_name = "6-SVD++"
                                 p_type = True
@@ -249,7 +263,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             method_choice = method
                             valid_in = True
                             # recommendations = create_svd(full_df, ffm_df, chosen_user)
-                            recommendations_df, dp_result = approach1(full_df, train, chosen_user, False, code, True, dp_round, False, g_test_split)
+                            recommendations_df, dp_result = approach1(full_df, train, test, chosen_user, False, code, True, dp_round, False, g_test_split)
                             m_name = "SVD"
                             p_type = False
                             b_type = False
@@ -257,7 +271,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             method_choice = method
                             valid_in = True
                             # recommendations = create_svd_2(full_df, ffm_df, chosen_user)
-                            recommendations_df, dp_result = approach1(full_df, train, chosen_user, True, code, True, dp_round, False, g_test_split)
+                            recommendations_df, dp_result = approach1(full_df, train, test, chosen_user, True, code, True, dp_round, False, g_test_split)
                             m_name = "SVD"
                             p_type = False
                             b_type = False
@@ -293,32 +307,32 @@ def select_method(full_df, train, test, chosen_user, code):
 
                     print("Personality LightGBM...")
                     results.append(
-                        ["LightGBM", True, True, create_lightgbm(equal, train, chosen_user, "L", code, False, g_test_split), 1])
+                        ["LightGBM", True, True, create_lightgbm(equal, train, test, chosen_user, "L", code, False, g_test_split), 1])
                     # print(results)
                     # results.append(
-                    #     ["LightGBM", True, False, create_lightgbm(full_df, train, chosen_user, "L", code, False, g_test_split), 1])
+                    #     ["LightGBM", True, False, create_lightgbm(full_df, train, test, chosen_user, "L", code, False, g_test_split), 1])
                     # print("Personality Random Forest...")
                     # results.append(
-                    #     ["RandomForest", True, True, create_lightgbm(equal, train, chosen_user, "R", code, False, g_test_split), 2])
+                    #     ["RandomForest", True, True, create_lightgbm(equal, train, test, chosen_user, "R", code, False, g_test_split), 2])
                     # results.append(
-                    #     ["RandomForest", True, False, create_lightgbm(full_df, train, chosen_user, "R", code, False, g_test_split),
+                    #     ["RandomForest", True, False, create_lightgbm(full_df, train, test, chosen_user, "R", code, False, g_test_split),
                     #      2])
                     print("Personality 6-SVD...")
                     results.append(
-                        ["6-SVD", True, True, approach1(equal, train, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
+                        ["6-SVD", True, True, approach1(equal, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
                     # results.append(
-                        # ["6-SVD", True, False, approach1(full_df, train, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
+                        # ["6-SVD", True, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
                     # print("Non-Personality SVD...")
-                    # results.append(["SVD", False, False, approach1(full_df, train, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
-                    # results.append(["SVD", False, True, approach1(equal, train, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
+                    # results.append(["SVD", False, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
+                    # results.append(["SVD", False, True, approach1(equal, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
                     # print("Personality 6-SVD++...")
                     # results.append(
-                    #     ["6-SVD++", True, True, approach1(equal, train, chosen_user, True, code, False, dp, True, g_test_split)[0], 4])
+                    #     ["6-SVD++", True, True, approach1(equal, train, test, chosen_user, True, code, False, dp, True, g_test_split)[0], 4])
                     # results.append(
-                        # ["6-SVD++", True, False, approach1(full_df, train, chosen_user, True, code, False, dp, True, g_test_split)[0], 4])
+                        # ["6-SVD++", True, False, approach1(full_df, train, test, chosen_user, True, code, False, dp, True, g_test_split)[0], 4])
                     # print("Non-Personality SVD++...")
-                    # results.append(["SVD++", False, False, approach1(full_df, train, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
-                    # results.append(["SVD++", False, True, approach1(equal, train, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
+                    # results.append(["SVD++", False, False, approach1(full_df, train, test, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
+                    # results.append(["SVD++", False, True, approach1(equal, train, test, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
                     # print("Baseline NeuralNet...")
                     # results.append(
                     #     ["Baseline NeuralNet", True, True, baseline_nn(equal, train, chosen_user, code, False, g_test_split), 6])
@@ -382,7 +396,7 @@ def select_method(full_df, train, test, chosen_user, code):
             else:
                 print("Most recommended")
                 print(recommendations_df.head(10))
-                response = evaluate(code, m_name, p_type, b_type, recommendations_df, train, test, chosen_user, True, feature_nums[m_choice])
+                response = evaluate(code, m_name, p_type, b_type, recommendations_df, train, test, chosen_user, True, feature_nums[m_choice], full_df)
                 g_results.append(response)
 
         elif choice.upper() == "A":
@@ -394,30 +408,30 @@ def select_method(full_df, train, test, chosen_user, code):
             print("Invalid input")
 
 
-def train_test_split(df, user):
-
-    users = df["reviewerID"].unique()
-
-    parts_train = []
-    parts_test = []
-
-    for i in tqdm(range(len(users))):
-        user_df = df.loc[df['reviewerID'] == users[i]]
-        rows, columns = user_df.shape
-
-        split = 0.2
-        splitter = int(rows * split)
-
-        test = user_df.iloc[splitter:]
-        parts_test.append(test)
-
-        train = user_df.iloc[:splitter]
-        parts_train.append(train)
-
-    res_train = pd.concat(parts_train)
-    res_test = pd.concat(parts_test)
-
-    return res_train, res_test
+# def train_test_split(df, user):
+#
+#     users = df["reviewerID"].unique()
+#
+#     parts_train = []
+#     parts_test = []
+#
+#     for i in tqdm(range(len(users))):
+#         user_df = df.loc[df['reviewerID'] == users[i]]
+#         rows, columns = user_df.shape
+#
+#         split = 0.2
+#         splitter = int(rows * split)
+#
+#         test = user_df.iloc[splitter:]
+#         parts_test.append(test)
+#
+#         train = user_df.iloc[:splitter]
+#         parts_train.append(train)
+#
+#     res_train = pd.concat(parts_train)
+#     res_test = pd.concat(parts_test)
+#
+#     return res_train, res_test
 
 
 def output_results():
