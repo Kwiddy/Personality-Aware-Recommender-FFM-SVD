@@ -15,39 +15,47 @@ def translate(val, dic):
     return dic[val]
 
 
-def pre_process(df, asin_convert):
-    df = df.drop(
-        columns=["Unnamed: 0_x", "Unnamed: 0_y", "verified", "reviewTime", "style", "image", "reviewerName",
-                 "reviewText", "summary", "vote", "unixReviewTime"])
+def pre_process(df, asin_convert, use_personality):
+    if use_personality:
+        df = df.drop(
+            columns=["Unnamed: 0_x", "Unnamed: 0_y", "verified", "reviewTime", "style", "image", "reviewerName",
+                     "reviewText", "summary", "vote", "unixReviewTime"])
+    else:
+        df = df.drop(
+            columns=["Unnamed: 0", "verified", "reviewTime", "style", "image", "reviewerName", "reviewText", "summary",
+                     "vote", "unixReviewTime"])
+
     df = df.drop(columns=["reviewerID"])
+
+    print(df.columns)
 
     df["asin"] = df.progress_apply(lambda x: translate(x.asin, asin_convert), axis=1)
 
     return df
 
 
-def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp, split):
-    if code.upper() == "K":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
-    elif code.upper() == "M":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movie_and_TV_5_personality.csv")
-    elif code.upper() == "V":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Video_Games_5_personality.csv")
-    elif code.upper() == "D":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Digital_Music_5_personality.csv")
-    elif code.upper() == "P":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Pet_Supplies_5_personality.csv")
-    elif code.upper() == "G":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Patio_Lawn_and_Garden_5_personality.csv")
-    elif code.upper() == "S":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Sports_and_Outdoors_5_personality.csv")
-    elif code.upper() == "C":
-        personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5_personality.csv")
+def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp, split, use_personality):
+    if use_personality:
+        if code.upper() == "K":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
+        elif code.upper() == "M":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movie_and_TV_5_personality.csv")
+        elif code.upper() == "V":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Video_Games_5_personality.csv")
+        elif code.upper() == "D":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Digital_Music_5_personality.csv")
+        elif code.upper() == "P":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Pet_Supplies_5_personality.csv")
+        elif code.upper() == "G":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Patio_Lawn_and_Garden_5_personality.csv")
+        elif code.upper() == "S":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Sports_and_Outdoors_5_personality.csv")
+        elif code.upper() == "C":
+            personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5_personality.csv")
+        full_df = full_df.merge(personalities, on="reviewerID")
 
     R = 42
     target_col = "overall"
-
-    full_df = full_df.merge(personalities, on="reviewerID")
 
     ######################################################
     # # originally: p0.11 = 1.578, p0.11 = 1.530
@@ -100,8 +108,8 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
         asin_convert[item] = id
         id += 1
 
-    neighbourhood = pre_process(neighbourhood, asin_convert)
-    target = pre_process(target, asin_convert)
+    neighbourhood = pre_process(neighbourhood, asin_convert, use_personality)
+    target = pre_process(target, asin_convert, use_personality)
 
     x_target = target.drop(columns=target_col)
     y_target = target[target_col]
@@ -144,7 +152,9 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
 
     result = x_target.copy()
     result["predictions"] = predictions
-    result = result.drop(columns=["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"])
+    if use_personality:
+        result = result.drop(columns=["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm",
+                                      "Openness_to_Experience"])
     result = result.sort_values(by=['predictions'], ascending=False)
 
     result["asin"] = result.progress_apply(lambda j: translate(j.asin, reverse_asin_convert), axis=1)
