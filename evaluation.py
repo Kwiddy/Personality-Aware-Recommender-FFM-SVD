@@ -23,9 +23,6 @@ def evaluate(df_code, model_name, personality_type, balance_type, results, train
 
     comparison = user_test_relev.join(results)
 
-    print("comparison")
-    print(comparison)
-
     # These NaN results will be the train split
     comparison = comparison.dropna()
 
@@ -40,7 +37,6 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
     if disp:
         results_graph(df, model_name, personality_type, balance_type, df_code)
     rmse_df = df.copy()
-    print(df)
     rmse_df["RMSE"] = (df["actual"]-df["predictions"])**2
     rmse_df["AbsError"] = abs(df["actual"]-df["predictions"])
     
