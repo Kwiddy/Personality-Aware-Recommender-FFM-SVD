@@ -127,10 +127,10 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     # print("MSE: %.3f" % sklearn.metrics.mean_squared_error(y_test, predictions))
     # print("RMSE: %.3f" % sklearn.metrics.mean_squared_error(y_test, predictions, squared=False))
 
-    print(x_target)
+    # print(x_target)
     to_predict = x_target.set_index("asin").copy()
     to_predict = to_predict[~to_predict.index.duplicated(keep='first')].reset_index()
-    print(to_predict)
+    # print(to_predict)
 
     predictions = model.predict(x_target)
 
@@ -155,6 +155,7 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     filtered_result = result.set_index("asin").copy()
     filtered_result = filtered_result[~filtered_result.index.duplicated(keep='first')].reset_index()
 
+    print(filtered_result)
     return filtered_result
 
 
