@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 
 
 # adapted from tutorial https://machinelearningmastery.com/regression-tutorial-keras-deep-learning-library-python/
-def baseline_nn(full_df, train, test, chosen_user, code, disp, split):
+def baseline_nn(full_df, train, test, chosen_user, code, disp, split, n_epochs):
     if code.upper() == "K":
         personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
     elif code.upper() == "M":
@@ -73,7 +73,7 @@ def baseline_nn(full_df, train, test, chosen_user, code, disp, split):
     else:
         vb = 0
     # estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=1, verbose=vb, random_state=42)
-    estimator = KerasRegressor(build_fn=baseline_model, epochs=25, batch_size=1, verbose=vb, random_state=R)
+    estimator = KerasRegressor(build_fn=baseline_model, epochs=n_epochs, batch_size=1, verbose=vb, random_state=R)
 
     # kfold = KFold(n_splits=2)
     # results = cross_val_score(estimator, x, y, cv=kfold)
