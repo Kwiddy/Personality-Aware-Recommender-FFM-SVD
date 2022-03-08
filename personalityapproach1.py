@@ -60,23 +60,18 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     # reduce
     small_df = full_df[["reviewerID", "asin", "overall"]].copy()
 
-    # TODO: remove 40% test set from user here, and make that 40% the items_to_predict can I then just
-    #       remove all NaN from evaluation dataset? (as this would be the training 60% <- CHECK THIS WITH SIZES)
     seen_items = small_df.loc[small_df['reviewerID'] == chosen_user, 'asin'].tolist()
-    print("seen items length: ", len(seen_items))
+    # print("seen items length: ", len(seen_items))
     # test_items = random.sample(seen_items, math.floor(len(seen_items)*split))
     test_items = test
-    print("test items to remove: ", test_items)
+    # print("test items to remove: ", test_items)
     train_items = train
 
-    # TODO: CHECK: Why isn't len 1 below - len 2 below = to the number of test items to remove, have
-    #  they reviewed items multiple times?
-
-    # TODO: remove test items from small_df here
-    print(len(small_df))
-    # small_df = small_df.drop(small_df[(small_df["asin"] in test_items) & (small_df["reviewerID"] == chosen_user)].index)
+    # TODO: this is the key line, if commented then predictions vary, otherwise they don't
     small_df = small_df.drop(small_df[(small_df['asin'].isin(test_items)) & (small_df['reviewerID'] == chosen_user)].index)
-    print(len(small_df))
+
+
+    # print(len(small_df))
     # exit()
 
     reader = Reader(rating_scale=(1, 5))
@@ -91,10 +86,13 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     # and then its predicting how much the user would like unseen items?
     # items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 
+    vb = True
+    # vb = False
+
     if plus_bool:
-        algo = SVDpp(random_state=R, verbose=True)
+        algo = SVDpp(random_state=R, verbose=vb)
     else:
-        algo = SVD(random_state=R, verbose=True)
+        algo = SVD(random_state=R, verbose=vb)
 
     algo.fit(data.build_full_trainset())
 
@@ -105,27 +103,28 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     for iid in test_items:
         my_recs1.append((iid, algo.predict(uid=chosen_user, iid=iid).est))
 
-    chosen_peronsality_row = personalities.loc[personalities['reviewerID'] == chosen_user]
-    ext_score = round(float(chosen_peronsality_row["Extroversion"]), dp)
-    ote_score = round(float(chosen_peronsality_row["Openness_to_Experience"]), dp)
-    agr_score = round(float(chosen_peronsality_row["Agreeableness"]), dp)
-    con_Score = round(float(chosen_peronsality_row["conscientiousness"]), dp)
-    neu_score = round(float(chosen_peronsality_row["Neurotisicm"]), dp)
+    if use_personality:
+        chosen_peronsality_row = personalities.loc[personalities['reviewerID'] == chosen_user]
+        ext_score = round(float(chosen_peronsality_row["Extroversion"]), dp)
+        ote_score = round(float(chosen_peronsality_row["Openness_to_Experience"]), dp)
+        agr_score = round(float(chosen_peronsality_row["Agreeableness"]), dp)
+        con_Score = round(float(chosen_peronsality_row["conscientiousness"]), dp)
+        neu_score = round(float(chosen_peronsality_row["Neurotisicm"]), dp)
 
-    # corr_ext, my_recs2 = personality_svd("Extroversion", full_df, items_to_predict, ext_score, plus_bool, R, chosen_user)
-    # corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, items_to_predict, ote_score, plus_bool, R, chosen_user)
-    # corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, items_to_predict, agr_score, plus_bool, R, chosen_user)
-    # corr_con, my_recs5 = personality_svd("conscientiousness", full_df, items_to_predict, con_Score, plus_bool, R, chosen_user)
-    # corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, items_to_predict, neu_score, plus_bool, R, chosen_user)
+        # corr_ext, my_recs2 = personality_svd("Extroversion", full_df, items_to_predict, ext_score, plus_bool, R, chosen_user)
+        # corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, items_to_predict, ote_score, plus_bool, R, chosen_user)
+        # corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, items_to_predict, agr_score, plus_bool, R, chosen_user)
+        # corr_con, my_recs5 = personality_svd("conscientiousness", full_df, items_to_predict, con_Score, plus_bool, R, chosen_user)
+        # corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, items_to_predict, neu_score, plus_bool, R, chosen_user)
 
-    corr_ext, my_recs2 = personality_svd("Extroversion", full_df, test_items, ext_score, plus_bool, R, chosen_user)
-    corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, test_items, ote_score, plus_bool, R, chosen_user)
-    corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, test_items, agr_score, plus_bool, R, chosen_user)
-    corr_con, my_recs5 = personality_svd("conscientiousness", full_df, test_items, con_Score, plus_bool, R, chosen_user)
-    corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, test_items, neu_score, plus_bool, R, chosen_user)
+        corr_ext, my_recs2 = personality_svd("Extroversion", full_df, test_items, ext_score, plus_bool, R, chosen_user, vb)
+        corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, test_items, ote_score, plus_bool, R, chosen_user, vb)
+        corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, test_items, agr_score, plus_bool, R, chosen_user, vb)
+        corr_con, my_recs5 = personality_svd("conscientiousness", full_df, test_items, con_Score, plus_bool, R, chosen_user, vb)
+        corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, test_items, neu_score, plus_bool, R, chosen_user, vb)
 
-    map_corr = (corr_con + corr_agr + corr_ote + corr_neu + corr_ext) / 5
-    print("Mean Absolute Personality (MAP) Correlation: ", map_corr)
+        map_corr = (corr_con + corr_agr + corr_ote + corr_neu + corr_ext) / 5
+        print("Mean Absolute Personality (MAP) Correlation: ", map_corr)
 
     # ####################################
 
@@ -145,28 +144,18 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
                 results.append(my_recs5[i][1])
             for j in range(int(100*round(float(corr_neu), 2))):
                 results.append(my_recs6[i][1])
-        else:
-            for j in range(int(100*round(float(0), 2))):
-                results.append(my_recs2[i][1])
-            for j in range(int(100*round(float(0), 2))):
-                results.append(my_recs3[i][1])
-            for j in range(int(100*round(float(0), 2))):
-                results.append(my_recs4[i][1])
-            for j in range(int(100*round(float(0), 2))):
-                results.append(my_recs5[i][1])
-            for j in range(int(100*round(float(0), 2))):
-                results.append(my_recs6[i][1])
         for j in range(100):
             results.append(my_recs1[i][1])
         mean = sum(results) / len(results)
         my_recs.append((my_recs1[i][0], mean))
 
     result = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
+    # print(result)
 
     return result, dp
 
 
-def personality_svd(personality, full_df, items_to_predict, user_score, plus_bool, R, chosen_user):
+def personality_svd(personality, full_df, items_to_predict, user_score, plus_bool, R, chosen_user, vb):
     # reduce
     small_df = full_df[[personality, "reviewerID", "asin", "overall"]].copy()
 
@@ -174,11 +163,7 @@ def personality_svd(personality, full_df, items_to_predict, user_score, plus_boo
     #  they reviewed items multiple times?
 
     # TODO: remove test items from small_df here
-    print(len(small_df))
-    # small_df = small_df.drop(small_df[(small_df["asin"] in test_items) & (small_df["reviewerID"] == chosen_user)].index)
-    small_df = small_df.drop(
-        small_df[(small_df['asin'].isin(items_to_predict)) & (small_df['reviewerID'] == chosen_user)].index)
-    print(len(small_df))
+    small_df = small_df.drop(small_df[(small_df['asin'].isin(items_to_predict)) & (small_df['reviewerID'] == chosen_user)].index)
 
     small_df = small_df[[personality, "asin", "overall"]]
 
@@ -186,9 +171,9 @@ def personality_svd(personality, full_df, items_to_predict, user_score, plus_boo
     data = Dataset.load_from_df(small_df, reader)
 
     if plus_bool:
-        algo = SVDpp(random_state=R, verbose=True)
+        algo = SVDpp(random_state=R, verbose=vb)
     else:
-        algo = SVD(random_state=R, verbose=True)
+        algo = SVD(random_state=R, verbose=vb)
 
     algo.fit(data.build_full_trainset())
     recs = []
