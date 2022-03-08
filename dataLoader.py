@@ -303,32 +303,45 @@ def find_chosen(df, code):
         spread = pickle.load(open_file)
         open_file.close()
     except:
-        users_ratings = {}
-        grouped = df.groupby(['reviewerID'])
-        max_count = 0
-        for name, group in tqdm(grouped):
-            group = group
-            counts = dict(group["overall"].value_counts())
-            if sum(counts.values()) > max_count:
-                max_count = sum(counts.values())
-            # if sum(counts.values()) >= 100:
-            if sum(counts.values()) >= 1:
-                users_ratings[name] = counts
 
-        for k, v in tqdm(users_ratings.items()):
-            temp = [0, 0, 0, 0, 0]
-            for k2, v2 in v.items():
-                temp[k2-1] = v2/sum(v.values())
-            users_ratings[k] = temp
-
-        # calc rmse of each list
-        target = [0.2, 0.2, 0.2, 0.2, 0.2]
+        print("calculating reviews for each user")
+        counted = dict(df['reviewerID'].value_counts())
+        # i = 1
+        # for k, v in counted.items():
+        #     print(k, v)
+        #     i += 1
+        #     if i == 20:
+        #         break
+        #
+        # users_ratings = {}
+        # grouped = df.groupby(['reviewerID'])
+        # max_count = 0
+        # for name, group in tqdm(grouped):
+        #     group = group
+        #     counts = dict(group["overall"].value_counts())
+        #     if sum(counts.values()) > max_count:
+        #         max_count = sum(counts.values())
+        #     if sum(counts.values()) >= 100:
+        #         users_ratings[name] = counts
+        #
+        # for k, v in tqdm(users_ratings.items()):
+        #     temp = [0, 0, 0, 0, 0]
+        #     for k2, v2 in v.items():
+        #         temp[k2-1] = v2/sum(v.values())
+        #     users_ratings[k] = temp
+        #
+        # # calc rmse of each list
+        # target = [0.2, 0.2, 0.2, 0.2, 0.2]
         spread = []
-        for k, v in tqdm(users_ratings.items()):
-            rms = mean_squared_error(target, v, squared=False)
-            spread.append([k, rms * (max_count-sum(counts.values()))])
+        # for k, v in tqdm(users_ratings.items()):
+        #     rms = mean_squared_error(target, v, squared=False)
+        #     spread.append([k, rms * (max_count-sum(counts.values()))])
 
-        spread = sorted(spread, key=lambda x: x[1], reverse=True)
+        for k, v in counted.items():
+            spread.append([k, v])
+
+        # spread = sorted(spread, key=lambda x: x[1], reverse=True)
+        spread = sorted(spread, key=lambda x: x[1], reverse=False)
 
         open_file = open(file_name, "wb")
         pickle.dump(spread, open_file)
