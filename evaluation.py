@@ -39,6 +39,9 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
     rmse_df = df.copy()
     rmse_df["RMSE"] = (df["actual"]-df["predictions"])**2
     rmse_df["AbsError"] = abs(df["actual"]-df["predictions"])
+
+    print(model_name)
+    print(rmse_df)
     
     rmse = math.sqrt(rmse_df["RMSE"].mean())
 
