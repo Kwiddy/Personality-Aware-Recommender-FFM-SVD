@@ -7,6 +7,7 @@ from tqdm import tqdm
 from os.path import exists
 from personality_neighbourhood import get_neighbourhood
 from sklearn.metrics import mean_squared_error
+from datacleaner import clean
 import numpy as np
 import pickle
 
@@ -15,6 +16,7 @@ random.seed(42)
 
 def getDF(path, parent_path, extension):
     new_path = parent_path + extension
+    duplicate_path = parent_path + "clean_" + extension
 
     if exists(new_path):
         print("Full dataframe already exists...")
@@ -28,7 +30,17 @@ def getDF(path, parent_path, extension):
         print(new_path)
         df.to_csv(new_path)
 
-    return df
+    if exists(duplicate_path):
+        print("Clean dataframe already exists...")
+        print("Retrieving clean dataframe...")
+        reduced_df = pd.read_csv(duplicate_path)
+    else:
+        print("cleaning dataframe")
+        clean(new_path, duplicate_path)
+        reduced_df = pd.read_csv(duplicate_path)
+
+    # df is the full df, reduced_df is the df without user-item duplicates
+    return df, reduced_df
 
 
 def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method, first_time, g_abs_num):
