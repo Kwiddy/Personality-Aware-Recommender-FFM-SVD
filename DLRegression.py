@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 
 
 # adapted from tutorial https://machinelearningmastery.com/regression-tutorial-keras-deep-learning-library-python/
-def baseline_nn(full_df, train, chosen_user, code, disp, split):
+def baseline_nn(full_df, train, test, chosen_user, code, disp, split):
     if code.upper() == "K":
         personalities = pd.read_csv("Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
     elif code.upper() == "M":
@@ -40,7 +40,8 @@ def baseline_nn(full_df, train, chosen_user, code, disp, split):
     neighbourhood = full_df[full_df.reviewerID != chosen_user]
     target = full_df[full_df.reviewerID == chosen_user]
 
-    train_target, test_target = train_test_split(target, test_size=split, random_state=R)
+    train_target = target.loc[target["asin"].isin(train)]
+    test_target = target.loc[target["asin"].isin(test)]
 
     neighbourhood = pd.concat([neighbourhood, train_target])
     target = test_target.copy()
