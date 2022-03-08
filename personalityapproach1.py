@@ -12,7 +12,7 @@ random.seed(42)
 # https://predictivehacks.com/how-to-run-recommender-systems-in-python/
 
 
-def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp, use_personality, split):
+def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_personality, split):
     if code.upper() == "K":
         personalities = pd.read_csv(
             "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
@@ -65,9 +65,9 @@ def approach1(full_df, train, chosen_user, plus_bool, code, disp, dp, use_person
     seen_items = small_df.loc[small_df['reviewerID'] == chosen_user, 'asin'].tolist()
     print("seen items length: ", len(seen_items))
     # test_items = random.sample(seen_items, math.floor(len(seen_items)*split))
-    test_items = random.sample(seen_items, math.ceil(len(seen_items)*split))
-    print("test items to remove: ", len(test_items))
-    train_items = list(set(seen_items) - set(test_items))
+    test_items = test
+    print("test items to remove: ", test_items)
+    train_items = train
 
     # TODO: CHECK: Why isn't len 1 below - len 2 below = to the number of test items to remove, have
     #  they reviewed items multiple times?
