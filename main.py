@@ -27,7 +27,7 @@ limit_method = None
 sub_limit_method = None
 g_results = []
 g_all = False
-g_test_split = 0.3
+g_test_split = 0.2
 g_absolute_num = None
 
 random.seed(42)
@@ -53,11 +53,12 @@ def main():
 
         if exists(personality_path):
             first_time = False
-            # full_df, rr, lm, lim, slm, abs_num = reduceDF(cleaned_df, df_code, chosen, restrict_reviews, limit_method, limit,
-            #                                      sub_limit_method, first_time, g_absolute_num)
-            full_df, rr, lm, lim, slm, abs_num = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method,
-                                                          limit,
-                                                          sub_limit_method, first_time, g_absolute_num)
+            full_df, rr, lm, lim, slm, abs_num = reduceDF(cleaned_df, df_code, chosen, restrict_reviews, limit_method, limit,
+                                                 sub_limit_method, first_time, g_absolute_num)
+            # print("User reviews: ", len(full_df[full_df['reviewerID'] == chosen]))
+            # full_df, rr, lm, lim, slm, abs_num = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method,
+            #                                               limit,
+            #                                               sub_limit_method, first_time, g_absolute_num)
             restrict_reviews = rr
             limit_method = lm
             sub_limit_method = slm
@@ -66,6 +67,8 @@ def main():
 
         else:
             first_time = True
+            # operate on full_df at this stage so that all reviews, even identical user-item pairs, are taken into
+            #       account in review APR
             full_df, rr, lm, lim, slm, abs_num = reduceDF(retrieved_df, df_code, chosen, restrict_reviews, limit_method, limit,
                                                  sub_limit_method, first_time, g_absolute_num)
             ffm_df = review_APR(full_df, parent_path, ext)
@@ -76,10 +79,10 @@ def main():
         # train, test = train_test_split(full_df, chosen_user)
         user_items = full_df.loc[full_df['reviewerID'] == chosen]
         user_items = user_items["asin"].unique()
-        print(user_items)
+        # print(user_items)
         train, test = train_test_split(user_items, test_size=g_test_split, random_state=42)
-        print("train: ",train)
-        print("test: ", test)
+        # print("train: ",train)
+        # print("test: ", test)
 
         select_method(full_df, train, test, chosen, df_code)
 
@@ -239,7 +242,7 @@ def select_method(full_df, train, test, chosen_user, code):
                                 method_choice = method
                                 valid_in = True
                                 m_choice = 6
-                                recommendations_df = baseline_nn(equal, train, chosen_user, code, True, g_test_split)
+                                recommendations_df = baseline_nn(equal, train, test, chosen_user, code, True, g_test_split)
                                 m_name = "NeuralNet"
                                 p_type = True
                                 b_type = True
@@ -320,11 +323,11 @@ def select_method(full_df, train, test, chosen_user, code):
                     print("Personality 6-SVD...")
                     results.append(
                         ["6-SVD", True, True, approach1(equal, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
-                    # results.append(
-                        # ["6-SVD", True, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
-                    # print("Non-Personality SVD...")
-                    # results.append(["SVD", False, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
-                    # results.append(["SVD", False, True, approach1(equal, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
+                    results.append(
+                        ["6-SVD", True, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
+                    print("Non-Personality SVD...")
+                    results.append(["SVD", False, True, approach1(equal, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
+                    results.append(["SVD", False, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
                     # print("Personality 6-SVD++...")
                     # results.append(
                     #     ["6-SVD++", True, True, approach1(equal, train, test, chosen_user, True, code, False, dp, True, g_test_split)[0], 4])
@@ -333,9 +336,9 @@ def select_method(full_df, train, test, chosen_user, code):
                     # print("Non-Personality SVD++...")
                     # results.append(["SVD++", False, False, approach1(full_df, train, test, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
                     # results.append(["SVD++", False, True, approach1(equal, train, test, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
-                    # print("Baseline NeuralNet...")
-                    # results.append(
-                    #     ["Baseline NeuralNet", True, True, baseline_nn(equal, train, chosen_user, code, False, g_test_split), 6])
+                    print("Baseline NeuralNet...")
+                    results.append(
+                        ["Baseline NeuralNet", True, True, baseline_nn(equal, train, test, chosen_user, code, False, g_test_split), 6])
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
@@ -345,7 +348,6 @@ def select_method(full_df, train, test, chosen_user, code):
 
                 print()
                 for result in results:
-                    print(result)
                     response = evaluate(code, result[0], result[1], result[2], result[3], train, test, chosen_user, False, feature_nums[result[4]], full_df)
                     df_dict["Model"].append(result[0])
                     df_dict["Personality"].append(result[1])
@@ -477,6 +479,7 @@ def output_results():
         # print(weighted_avg_dict)
 
         weighted_avg_df = pd.DataFrame(columns=combined_results.columns)
+        weighted_avg_df = weighted_avg_df.drop(columns=["RMSE 1", "RMSE 2", "RMSE 3", "RMSE 4", "RMSE 5"])
 
         wms = []
         # take weighted average of all columns
@@ -506,11 +509,13 @@ def output_results():
             'Model': [v[0][0] for k, v in weighted_avg_dict.items()],
             'Personality': [v[0][1] for k, v in weighted_avg_dict.items()],
             'Ratings-balanced': [v[0][2] for k, v in weighted_avg_dict.items()],
-            "RMSE 1": wms[0],
-            "RMSE 2": wms[1],
-            "RMSE 3": wms[2],
-            "RMSE 4": wms[3],
-            "RMSE 5": wms[4],
+            # removed these as stdev now does the job and also averaging identical user-item reviews means there are
+            #       are more ratings categories than just 1-5 ints
+            # "RMSE 1": wms[0],
+            # "RMSE 2": wms[1],
+            # "RMSE 3": wms[2],
+            # "RMSE 4": wms[3],
+            # "RMSE 5": wms[4],
             "Overall RMSE": wms[5],
             "MAE": wms[6],
             "Adjusted R2": wms[7],
