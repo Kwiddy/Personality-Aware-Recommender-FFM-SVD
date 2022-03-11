@@ -8,6 +8,7 @@ from os.path import exists
 from personality_neighbourhood import get_neighbourhood
 from sklearn.metrics import mean_squared_error
 from datacleaner import clean
+from operator import itemgetter
 import numpy as np
 import pickle
 
@@ -306,6 +307,7 @@ def find_chosen(df, code):
 
         print("calculating reviews for each user")
         counted = dict(df['reviewerID'].value_counts())
+        print("len counted: ", len(counted))
         # i = 1
         # for k, v in counted.items():
         #     print(k, v)
@@ -313,35 +315,52 @@ def find_chosen(df, code):
         #     if i == 20:
         #         break
         #
-        # users_ratings = {}
-        # grouped = df.groupby(['reviewerID'])
-        # max_count = 0
-        # for name, group in tqdm(grouped):
-        #     group = group
-        #     counts = dict(group["overall"].value_counts())
-        #     if sum(counts.values()) > max_count:
-        #         max_count = sum(counts.values())
-        #     if sum(counts.values()) >= 100:
-        #         users_ratings[name] = counts
+        users_ratings = {}
+        grouped = df.groupby(['reviewerID'])
+        max_count = 0
+        for name, group in tqdm(grouped):
+            group = group
+            counts = dict(group["overall"].value_counts())
+            if sum(counts.values()) > max_count:
+                max_count = sum(counts.values())
+            if sum(counts.values()) >= 1:
+                users_ratings[name] = counts
         #
-        # for k, v in tqdm(users_ratings.items()):
-        #     temp = [0, 0, 0, 0, 0]
-        #     for k2, v2 in v.items():
-        #         temp[k2-1] = v2/sum(v.values())
-        #     users_ratings[k] = temp
+        for k, v in tqdm(users_ratings.items()):
+            temp = [0, 0, 0, 0, 0]
+            for k2, v2 in v.items():
+                # ignore floats from averaging identical user-item pairs
+                try:
+                    temp[k2-1] = v2/sum(v.values())
+                except:
+                    pass
+            users_ratings[k] = temp
         #
         # # calc rmse of each list
-        # target = [0.2, 0.2, 0.2, 0.2, 0.2]
+        target = [0.2, 0.2, 0.2, 0.2, 0.2]
         spread = []
         # for k, v in tqdm(users_ratings.items()):
         #     rms = mean_squared_error(target, v, squared=False)
         #     spread.append([k, rms * (max_count-sum(counts.values()))])
 
-        for k, v in counted.items():
-            spread.append([k, v])
+        rms_dict = {}
+        max_rms = 0
+        for k, v in users_ratings.items():
+            rms = mean_squared_error(target, v, squared=False)
+            if rms > max_rms: max_rms = rms
+            rms_dict[k] = rms
 
-        # spread = sorted(spread, key=lambda x: x[1], reverse=True)
-        spread = sorted(spread, key=lambda x: x[1], reverse=False)
+        # try taking the top 50 most active reviewers and then sort those by distribution?
+        # take top 0.1%, even for video games with only 55k users, this is 55 to rank
+        res = dict(sorted(counted.items(), key=itemgetter(1), reverse=True)[:math.ceil(len(counted)/1000)])
+
+        for k, v in counted.items():
+            # spread.append([k, (max_rms-rms_dict[k])*(counted[k])])
+            if k in res:
+                spread.append([k, rms_dict[k]])
+
+        spread = sorted(spread, key=lambda x: x[1], reverse=True)
+        # spread = sorted(spread, key=lambda x: x[1], reverse=False)
 
         open_file = open(file_name, "wb")
         pickle.dump(spread, open_file)
