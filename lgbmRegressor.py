@@ -27,7 +27,7 @@ def pre_process(df, asin_convert, use_personality):
 
     df = df.drop(columns=["reviewerID"])
 
-    print(df.columns)
+    # print(df.columns)
 
     df["asin"] = df.progress_apply(lambda x: translate(x.asin, asin_convert), axis=1)
 
