@@ -12,7 +12,8 @@ def evaluate(df_code, model_name, personality_type, balance_type, results, train
     # user_test = test.loc[test['reviewerID'] == user]
     # user_test_relev = user_test[["asin", "overall"]].copy()
     user_test = full_df.loc[full_df['reviewerID'] == user]
-    user_test_relev = full_df[["asin", "overall"]].copy()
+    # user_test_relev = full_df[["asin", "overall"]].copy()
+    user_test_relev = user_test[["asin", "overall"]].copy()
 
     # rename overall to actual
     user_test_relev = user_test_relev.rename(columns={"overall": "actual"})
