@@ -103,6 +103,7 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     for iid in test_items:
         my_recs1.append((iid, algo.predict(uid=chosen_user, iid=iid).est))
 
+    id_importance = 1
     if use_personality:
         chosen_peronsality_row = personalities.loc[personalities['reviewerID'] == chosen_user]
         ext_score = round(float(chosen_peronsality_row["Extroversion"]), dp)
@@ -122,6 +123,16 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
         corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, test_items, agr_score, plus_bool, R, chosen_user, vb)
         corr_con, my_recs5 = personality_svd("conscientiousness", full_df, test_items, con_Score, plus_bool, R, chosen_user, vb)
         corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, test_items, neu_score, plus_bool, R, chosen_user, vb)
+
+        # corrs = [corr_neu, corr_agr, corr_con, corr_ext, corr_ote]
+        # id_importance = sum(corrs) / len(corrs)
+
+        # print(corr_ext)
+        # print(corr_ote)
+        # print(corr_agr)
+        # print(corr_con)
+        # print(corr_neu)
+        # exit()
 
         map_corr = (corr_con + corr_agr + corr_ote + corr_neu + corr_ext) / 5
         print("Mean Absolute Personality (MAP) Correlation: ", map_corr)
@@ -144,7 +155,7 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
                 results.append(my_recs5[i][1])
             for j in range(int(100*round(float(corr_neu), 2))):
                 results.append(my_recs6[i][1])
-        for j in range(100):
+        for j in range(int(100*round(float(id_importance), 2))):
             results.append(my_recs1[i][1])
         mean = sum(results) / len(results)
         my_recs.append((my_recs1[i][0], mean))
