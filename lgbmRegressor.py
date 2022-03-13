@@ -1,7 +1,7 @@
 import lightgbm as lgb
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report
 from sklearn.ensemble import RandomForestRegressor
 import sklearn
@@ -13,6 +13,9 @@ random.seed(42)
 
 def translate(val, dic):
     return dic[val]
+
+def normalize(value, min, max):
+    return (value-min) / (max-min)
 
 
 def pre_process(df, asin_convert, use_personality):
@@ -122,10 +125,23 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
                                                           random_state=R)
 
     if model_choice == "L":
-        model = lgb.LGBMRegressor(n_estimators=100, class_weight="balanced")
+        model = lgb.LGBMRegressor(random_state=R)
     elif model_choice == "R":
-        model = RandomForestRegressor()
+        model = RandomForestRegressor(random_state=R)
+
     model.fit(x_train, y_train)
+
+    # construct grid search and fit
+    # param_grid = create_grid(model_choice)
+    # grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, verbose=2)
+    # grid_search.fit(x_train, y_train)
+
+    grid_used = True
+
+    # output best parameters
+    # print()
+    # print("Best parameters: ")
+    # print(grid_search.best_params_)
 
     # predictions = model.predict(x_test)
     #
@@ -138,11 +154,11 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     # print(x_target)
     to_predict = x_target.set_index("asin").copy()
     to_predict = to_predict[~to_predict.index.duplicated(keep='first')].reset_index()
-    # print(to_predict)
 
     predictions = model.predict(x_target)
+    # predictions = grid_search.predict(x_target)
 
-    if disp:
+    if disp and not grid_used:
         print()
         print("LightGBM Feature importances: ")
         hd = list(x_train.columns)
@@ -169,5 +185,27 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     return filtered_result
 
 
-def normalize(value, min, max):
-    return (value-min) / (max-min)
+def create_grid(approach):
+    if approach == "L":
+        num_leaves = [31, 91]
+        n_estimators = [100, 200]
+        class_weight = ["balanced", None]
+        learning_rate = [0.1, 0.2, 0.3]
+        min_child_weight = [0.0001, 0.001, 0.01]
+        min_child_samples = [10,20,30]
+        subsample_for_bin = [100000, 200000, 300000]
+        # boosting_type = ["gbdt", "dart", "goss", "rf"]
+        param_grid = {
+            "num_leaves": num_leaves,
+            "n_estimators": n_estimators,
+            "class_weight": class_weight,
+            "learning_rate": learning_rate,
+            "min_child_weight": min_child_weight,
+            "min_child_samples": min_child_samples,
+            "subsample_for_bin": subsample_for_bin#,
+            # "boosting_type": boosting_type
+        }
+    else:
+        param_grid = {}
+
+    return param_grid
