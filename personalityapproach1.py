@@ -170,10 +170,6 @@ def personality_svd(personality, full_df, items_to_predict, user_score, plus_boo
     # reduce
     small_df = full_df[[personality, "reviewerID", "asin", "overall"]].copy()
 
-    # TODO: CHECK: Why isn't len 1 below - len 2 below = to the number of test items to remove, have
-    #  they reviewed items multiple times?
-
-    # TODO: remove test items from small_df here
     small_df = small_df.drop(small_df[(small_df['asin'].isin(items_to_predict)) & (small_df['reviewerID'] == chosen_user)].index)
 
     small_df = small_df[[personality, "asin", "overall"]]
