@@ -29,6 +29,7 @@ g_results = []
 g_all = False
 g_test_split = 0.3
 g_absolute_num = None
+g_test_bucket = None
 
 random.seed(42)
 
@@ -99,13 +100,13 @@ def main():
 def choose_data():
     v_choice = False
     print("[M] - Movies and TV")
-    print("[D] - Digital Music (DISCOUNTED)")
     print("[K] - Kindle Store")
     print("[V] - Video Games")
     print("[P] - Pet Supplies")
     print("[G] - Patio, Lawn, & Garden")
     print("[S] - Sports & Outdoors")
     print("[C] - Music (CDs & Vinyl)")
+    print("[D] - Digital Music (DISCOUNTED)")
     while not v_choice:
         choice = input("Please enter one of the datasets above: ")
         if choice.upper() == "M":
@@ -168,10 +169,11 @@ def select_method(full_df, train, test, chosen_user, code):
     global g_all
     global g_test_split
     global g_absolute_num
+    global g_test_bucket
 
     # make an equal number of each case
     counts = dict(full_df["overall"].value_counts())
-    print("counts1: ", counts)
+    # print("counts1: ", counts)
     to_del = []
     for k, v in counts.items():
         if k % 1 == 0:
@@ -180,13 +182,50 @@ def select_method(full_df, train, test, chosen_user, code):
             to_del.append(k)
     for key in to_del:
         del counts[key]
-    print("counts2: ", counts)
-    equal = full_df.groupby(['overall']).head(min(counts.values())).reset_index(drop=True)
-    # equal = full_df.groupby(['overall', "reviewerID"]).head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
-    print("Rating distribution 1: ", dict(equal["overall"].value_counts()))
-    user_rows = full_df.loc[full_df['reviewerID'] == chosen_user]
-    equal = pd.concat([equal, user_rows])
-    print("Rating distribution 2: ", dict(equal["overall"].value_counts()))
+
+    # print("counts2: ", counts)
+    # equal = full_df.groupby(['overall']).head(min(counts.values())).reset_index(drop=True)
+    # # equal = full_df.groupby(['overall', "reviewerID"]).head(min(dict(full_df["overall"].value_counts()).values())).reset_index(drop=True)
+    # print("Rating distribution 1: ", dict(equal["overall"].value_counts()))
+    # user_rows = full_df.loc[full_df['reviewerID'] == chosen_user]
+    # equal = pd.concat([equal, user_rows])
+    # print("Rating distribution 2: ", dict(equal["overall"].value_counts()))
+
+    neighbourhood = full_df[full_df.reviewerID != chosen_user]
+    target = full_df[full_df.reviewerID == chosen_user]
+    train_target = target.loc[target["asin"].isin(train)]
+    test_target = target.loc[target["asin"].isin(test)]
+    print("Len train target: ", len(train_target))
+    print("Len test target: ", len(test_target))
+    neighbourhood = pd.concat([neighbourhood, train_target])
+
+    original_rating = [1.0, 2.0, 3.0, 4.0, 5.0]
+    rd = dict(neighbourhood["overall"].value_counts())
+    o_rd = dict(full_df["overall"].value_counts())
+    print("Neighbourhood Rating distribution: ", rd)
+    print("Overall Rating distribution: ", o_rd)
+    most_common = max(rd, key=rd.get)
+    for k, v in rd.items():
+        if k != most_common and k in original_rating:
+            diff = rd[most_common]-rd[k]
+            print(k, str(diff))
+            multiplier = int(diff / rd[k])
+            print("multiplier: ", multiplier)
+            subsample = neighbourhood.loc[neighbourhood['overall'] == k]
+            # print(subsample)
+            if multiplier > 0:
+                to_append = pd.concat([subsample]*multiplier)
+                neighbourhood = pd.concat([neighbourhood, to_append])
+
+    full_df = pd.concat([neighbourhood, test_target])
+
+    rd = dict(neighbourhood["overall"].value_counts())
+    o_rd = dict(full_df["overall"].value_counts())
+    print("Neighbourhood Rating distribution: ", rd)
+    print("Overall Rating distribution: ", o_rd)
+    print("Number of reviews: ", full_df[full_df.columns[0]].count())
+    exit()
+
 
     # the number of features in each method for adjusted r**2 metric
     #1 LightGBM
@@ -269,7 +308,8 @@ def select_method(full_df, train, test, chosen_user, code):
                                 method_choice = method
                                 valid_in = True
                                 m_choice = 6
-                                recommendations_df = baseline_nn(equal, train, test, chosen_user, code, True, g_test_split, 25)
+                                # recommendations_df = baseline_nn(equal, train, test, chosen_user, code, True, g_test_split, 25, True)
+                                recommendations_df = baseline_nn(equal, train, test, chosen_user, code, True, g_test_split, 5, True)
                                 m_name = "NeuralNet"
                                 p_type = True
                                 b_type = True
@@ -326,21 +366,25 @@ def select_method(full_df, train, test, chosen_user, code):
                     if dp_round is not None:
                         dp = dp_round
                     else:
-                        valid_dp = False
-                        while not valid_dp:
-                            try:
-                                dp = int(input("Round SVD by (Recommended: 5): "))
-                                dp_round = dp
-                                valid_dp = True
-                            except:
-                                print("Invalid - Please enter an integer")
+                        if g_test_bucket is None:
+                            inp = input("Test SVD DP? [Y/N]: ")
+                            if inp.upper() == "N":
+                                valid_dp = False
+                                while not valid_dp:
+                                    try:
+                                        dp = int(input("Round SVD by (Recommended: 5): "))
+                                        dp_round = dp
+                                        valid_dp = True
+                                    except:
+                                        print("Invalid - Please enter an integer")
+                            g_test_bucket = inp
 
-                    # print("LightGBM...")
+                    print("LightGBM...")
                     # results.append(
                     #     ["LightGBM", True, True, create_lightgbm(equal, train, test, chosen_user, "L", code, False, g_test_split, True), 1])
                     # print(results)
-                    # results.append(
-                    #     ["LightGBM", True, False, create_lightgbm(full_df, train, test, chosen_user, "L", code, False, g_test_split, True), 1])
+                    results.append(
+                        ["LightGBM", True, False, create_lightgbm(full_df, train, test, chosen_user, "L", code, False, g_test_split, True), 1])
                     # results.append(
                     #     ["LightGBM", False, False,
                     #      create_lightgbm(full_df, train, test, chosen_user, "L", code, False, g_test_split, False), 7])
@@ -350,11 +394,21 @@ def select_method(full_df, train, test, chosen_user, code):
                     # results.append(
                     #     ["RandomForest", True, False, create_lightgbm(full_df, train, test, chosen_user, "R", code, False, g_test_split, True),
                     #      2])
-                    # print("Personality 6-SVD...")
-                    # results.append(
-                    #     ["6-SVD", True, True, approach1(equal, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
-                    # results.append(
-                    #     ["6-SVD", True, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
+
+                    print("Personality 6-SVD...")
+                    if g_test_bucket.upper() == "N":
+                        # results.append(
+                        #     ["6-SVD", True, True, approach1(equal, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
+                        results.append(["6-SVD", True, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, True, g_test_split)[0], 3])
+                    else:
+                        maxdp = 10
+                        for i in range(1, maxdp+1):
+                            name = "6-SVD-" + str(i)
+                            dp = i
+                            results.append([name, True, False,
+                                            approach1(full_df, train, test, chosen_user, False, code, False, dp, True,
+                                                      g_test_split)[0], 3])
+
                     # print("Non-Personality SVD...")
                     # results.append(["SVD", False, True, approach1(equal, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
                     # results.append(["SVD", False, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
@@ -366,14 +420,14 @@ def select_method(full_df, train, test, chosen_user, code):
                     # print("Non-Personality SVD++...")
                     # results.append(["SVD++", False, False, approach1(full_df, train, test, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
                     # results.append(["SVD++", False, True, approach1(equal, train, test, chosen_user, True, code, False, dp, False, g_test_split)[0], 5])
-                    print("Baseline NeuralNet...")
-                    n_epoch = 10
+                    # print("Baseline NeuralNet...")
+                    # n_epoch = 10
                     # results.append(
                     #     ["Baseline NeuralNet", True, True, baseline_nn(equal, train, test, chosen_user, code, False, g_test_split, 25), 6])
-                    results.append(
-                        ["Baseline NeuralNet", True, False, baseline_nn(full_df, train, test, chosen_user, code, True, g_test_split, n_epoch, True), 6])
-                    results.append(
-                        ["Baseline NeuralNet", False, False, baseline_nn(full_df, train, test, chosen_user, code, True, g_test_split, n_epoch, False), 6])
+                    # results.append(
+                    #     ["Baseline NeuralNet", True, False, baseline_nn(full_df, train, test, chosen_user, code, True, g_test_split, n_epoch, True), 6])
+                    # results.append(
+                    #     ["Baseline NeuralNet", False, False, baseline_nn(full_df, train, test, chosen_user, code, True, g_test_split, n_epoch, False), 6])
                 else:
                     print("Invalid input, please enter a 'Y' or an 'N'")
 
