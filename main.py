@@ -46,6 +46,22 @@ def main():
 
     retrieved_df, cleaned_df = getDF(file_path, parent_path, ext)
 
+    r_dist = dict(retrieved_df["overall"].value_counts())
+    sum_vals = sum([v for v in r_dist.values()])
+    for k, v in r_dist.items():
+        r_dist[k] = (v/sum_vals) * 100
+    print(r_dist)
+
+    skewness = 0
+    a = 0
+    b = 0
+    # calculate skewness
+    for k, v in r_dist.items():
+        a += (v-(sum(r_dist.values())/5))**3
+        b += (v-(sum(r_dist.values())/5))**2
+    skewness = round((0.2 * a) / ((0.2*b)**(3/2)), 3)
+    print("Skewness: ", skewness)
+
     chosen_user = find_chosen(cleaned_df, df_code)
     print("Chosen users: ", chosen_user)
     # for cu in chosen_user:
@@ -223,9 +239,8 @@ def select_method(full_df, train, test, chosen_user, code):
     o_rd = dict(full_df["overall"].value_counts())
     print("Neighbourhood Rating distribution: ", rd)
     print("Overall Rating distribution: ", o_rd)
-    print("Number of reviews: ", full_df[full_df.columns[0]].count())
-    exit()
-
+    num_reviews = full_df[full_df.columns[0]].count()
+    print("Number of reviews: ", num_reviews)
 
     # the number of features in each method for adjusted r**2 metric
     #1 LightGBM
@@ -272,7 +287,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             if method.upper() == "L":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, test, chosen_user, "L", code, True, g_test_split, True)
+                                recommendations_df = create_lightgbm(full_df, train, test, chosen_user, "L", code, True, g_test_split, True)
                                 m_name = "LightGBM"
                                 p_type = True
                                 b_type = True
@@ -280,7 +295,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "R":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df = create_lightgbm(equal, train, test, chosen_user, "R", code, True, g_test_split, True)
+                                recommendations_df = create_lightgbm(full_df, train, test, chosen_user, "R", code, True, g_test_split, True)
                                 m_name = "RandomForest"
                                 m_choice = 2
                                 p_type = True
@@ -288,7 +303,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "S":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df, dp_result = approach1(equal, train, test, chosen_user, False, code, True, dp_round, True, g_test_split)
+                                recommendations_df, dp_result = approach1(full_df, train, test, chosen_user, False, code, True, dp_round, True, g_test_split)
                                 print(recommendations_df)
                                 dp_round = dp_result
                                 m_name = "6-SVD"
@@ -298,7 +313,7 @@ def select_method(full_df, train, test, chosen_user, code):
                             elif method.upper() == "P":
                                 method_choice = method
                                 valid_in = True
-                                recommendations_df, dp_result = approach1(equal, train, test, chosen_user, True, code, True, dp_round, True, g_test_split)
+                                recommendations_df, dp_result = approach1(full_df, train, test, chosen_user, True, code, True, dp_round, True, g_test_split)
                                 dp_round = dp_result
                                 m_name = "6-SVD++"
                                 p_type = True
@@ -308,8 +323,8 @@ def select_method(full_df, train, test, chosen_user, code):
                                 method_choice = method
                                 valid_in = True
                                 m_choice = 6
-                                # recommendations_df = baseline_nn(equal, train, test, chosen_user, code, True, g_test_split, 25, True)
-                                recommendations_df = baseline_nn(equal, train, test, chosen_user, code, True, g_test_split, 5, True)
+                                # recommendations_df = baseline_nn(full_df, train, test, chosen_user, code, True, g_test_split, 25, True)
+                                recommendations_df = baseline_nn(full_df, train, test, chosen_user, code, True, g_test_split, 5, True)
                                 m_name = "NeuralNet"
                                 p_type = True
                                 b_type = True
@@ -385,9 +400,9 @@ def select_method(full_df, train, test, chosen_user, code):
                     # print(results)
                     results.append(
                         ["LightGBM", True, False, create_lightgbm(full_df, train, test, chosen_user, "L", code, False, g_test_split, True), 1])
-                    # results.append(
-                    #     ["LightGBM", False, False,
-                    #      create_lightgbm(full_df, train, test, chosen_user, "L", code, False, g_test_split, False), 7])
+                    results.append(
+                        ["LightGBM", False, False,
+                         create_lightgbm(full_df, train, test, chosen_user, "L", code, False, g_test_split, False), 7])
                     # print("Personality Random Forest...")
                     # results.append(
                     #     ["RandomForest", True, True, create_lightgbm(equal, train, test, chosen_user, "R", code, False, g_test_split, True), 2])
@@ -411,7 +426,7 @@ def select_method(full_df, train, test, chosen_user, code):
 
                     # print("Non-Personality SVD...")
                     # results.append(["SVD", False, True, approach1(equal, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
-                    # results.append(["SVD", False, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
+                    results.append(["SVD", False, False, approach1(full_df, train, test, chosen_user, False, code, False, dp, False, g_test_split)[0], 5])
                     # print("Personality 6-SVD++...")
                     # results.append(
                     #     ["6-SVD++", True, True, approach1(equal, train, test, chosen_user, True, code, False, dp, True, g_test_split)[0], 4])
@@ -493,7 +508,7 @@ def select_method(full_df, train, test, chosen_user, code):
         elif choice.upper() == "A":
             # exploratory_analysis(full_df)
             model_analysis = choice
-            exploratory_analysis(equal)
+            exploratory_analysis(full_df)
             valid2 = True
         else:
             print("Invalid input")
