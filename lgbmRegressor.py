@@ -129,19 +129,19 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     elif model_choice == "R":
         model = RandomForestRegressor(random_state=R)
 
-    model.fit(x_train, y_train)
+    # model.fit(x_train, y_train)
 
     # construct grid search and fit
-    # param_grid = create_grid(model_choice)
-    # grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, verbose=2)
-    # grid_search.fit(x_train, y_train)
+    param_grid = create_grid(model_choice)
+    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, verbose=2)
+    grid_search.fit(x_train, y_train)
 
     grid_used = True
 
     # output best parameters
-    # print()
-    # print("Best parameters: ")
-    # print(grid_search.best_params_)
+    print()
+    print("Best parameters: ")
+    print(grid_search.best_params_)
 
     # predictions = model.predict(x_test)
     #
@@ -155,8 +155,8 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     to_predict = x_target.set_index("asin").copy()
     to_predict = to_predict[~to_predict.index.duplicated(keep='first')].reset_index()
 
-    predictions = model.predict(x_target)
-    # predictions = grid_search.predict(x_target)
+    # predictions = model.predict(x_target)
+    predictions = grid_search.predict(x_target)
 
     if disp and not grid_used:
         print()
@@ -187,14 +187,20 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
 
 def create_grid(approach):
     if approach == "L":
-        num_leaves = [31, 91]
-        n_estimators = [100, 200]
-        class_weight = ["balanced", None]
-        learning_rate = [0.1, 0.2, 0.3]
-        min_child_weight = [0.0001, 0.001, 0.01]
-        min_child_samples = [10,20,30]
-        subsample_for_bin = [100000, 200000, 300000]
-        # boosting_type = ["gbdt", "dart", "goss", "rf"]
+        # num_leaves = [31, 91, 121, 151, 251, 191, 211]
+        num_leaves = [201]
+        # n_estimators = [100, 200, 300, 400, 500, 700, 600, 650]
+        n_estimators = [550]
+        # class_weight = ["balanced", None]
+        class_weight = [None]
+        # learning_rate = [0.1, 0.2, 0.3]
+        learning_rate = [0.3]
+        # min_child_weight = [0.0001, 0.001, 0.01]
+        min_child_weight = [0]
+        # min_child_samples = [5, 10,20,30]
+        min_child_samples = [0]
+        # subsample_for_bin = [100000, 200000, 300000]
+        subsample_for_bin = [100000]
         param_grid = {
             "num_leaves": num_leaves,
             "n_estimators": n_estimators,
