@@ -87,12 +87,27 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     # items_to_predict = np.setdiff1d(unique_ids, seen_ids)
 
     vb = True
-    # vb = False
+
+    # id_importance = 1
+    # n_factors = 100
+    # n_epochs = 20
+    # init_mean = 0
+    # init_std_dev = 0.1
+    # lr_all = 0.005
+    # reg_all = 0.02
+
+    id_importance = 1
+    n_factors = 100
+    n_epochs = 20
+    init_mean = 0
+    init_std_dev = 0.2
+    lr_all = 0.0062
+    reg_all = 0.01
 
     if plus_bool:
-        algo = SVDpp(random_state=R, verbose=vb)
+        algo = SVDpp(random_state=R, verbose=vb, n_factors=n_factors, n_epochs=n_epochs, init_mean=init_mean, init_std_dev=init_std_dev, lr_all=lr_all, reg_all=reg_all)
     else:
-        algo = SVD(random_state=R, verbose=vb)
+        algo = SVD(random_state=R, verbose=vb, n_factors=n_factors, n_epochs=n_epochs, init_mean=init_mean, init_std_dev=init_std_dev, lr_all=lr_all, reg_all=reg_all)
 
     algo.fit(data.build_full_trainset())
 
@@ -103,7 +118,6 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     for iid in test_items:
         my_recs1.append((iid, algo.predict(uid=chosen_user, iid=iid).est))
 
-    id_importance = 1
     if use_personality:
         chosen_peronsality_row = personalities.loc[personalities['reviewerID'] == chosen_user]
         ext_score = round(float(chosen_peronsality_row["Extroversion"]), dp)
@@ -118,11 +132,14 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
         # corr_con, my_recs5 = personality_svd("conscientiousness", full_df, items_to_predict, con_Score, plus_bool, R, chosen_user)
         # corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, items_to_predict, neu_score, plus_bool, R, chosen_user)
 
-        corr_ext, my_recs2 = personality_svd("Extroversion", full_df, test_items, ext_score, plus_bool, R, chosen_user, vb)
-        corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, test_items, ote_score, plus_bool, R, chosen_user, vb)
-        corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, test_items, agr_score, plus_bool, R, chosen_user, vb)
-        corr_con, my_recs5 = personality_svd("conscientiousness", full_df, test_items, con_Score, plus_bool, R, chosen_user, vb)
-        corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, test_items, neu_score, plus_bool, R, chosen_user, vb)
+        corr_ext, my_recs2 = personality_svd("Extroversion", full_df, test_items, ext_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
+        corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, test_items, ote_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
+        corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, test_items, agr_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
+        corr_con, my_recs5 = personality_svd("conscientiousness", full_df, test_items, con_Score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
+        corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, test_items, neu_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
+
+        print("Summed correlation: ", sum([corr_ote, corr_ext, corr_con, corr_neu, corr_agr]))
+        id_importance = 2.2 * sum([corr_ote, corr_ext, corr_con, corr_neu, corr_agr])
 
         # corrs = [corr_neu, corr_agr, corr_con, corr_ext, corr_ote]
         # id_importance = sum(corrs) / len(corrs)
@@ -166,7 +183,7 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     return result, dp
 
 
-def personality_svd(personality, full_df, items_to_predict, user_score, plus_bool, R, chosen_user, vb):
+def personality_svd(personality, full_df, items_to_predict, user_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all):
     # reduce
     small_df = full_df[[personality, "reviewerID", "asin", "overall"]].copy()
 
@@ -178,9 +195,9 @@ def personality_svd(personality, full_df, items_to_predict, user_score, plus_boo
     data = Dataset.load_from_df(small_df, reader)
 
     if plus_bool:
-        algo = SVDpp(random_state=R, verbose=vb)
+        algo = SVDpp(random_state=R, verbose=vb, n_factors=n_factors, n_epochs=n_epochs, init_mean=init_mean, init_std_dev=init_std_dev, lr_all=lr_all, reg_all=reg_all)
     else:
-        algo = SVD(random_state=R, verbose=vb)
+        algo = SVD(random_state=R, verbose=vb, n_factors=n_factors, n_epochs=n_epochs, init_mean=init_mean, init_std_dev=init_std_dev, lr_all=lr_all, reg_all=reg_all)
 
     algo.fit(data.build_full_trainset())
     recs = []
