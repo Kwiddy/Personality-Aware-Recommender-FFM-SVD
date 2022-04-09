@@ -40,6 +40,14 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
 
     full_df = full_df.merge(personalities, on="reviewerID")
 
+    pers_domains = ["Extroversion", "Openness_to_Experience", "Agreeableness", "conscientiousness", "Neurotisicm"]
+    abs_corrs = []
+    for personality in pers_domains:
+        abs_corrs.append(abs(full_df[personality].corr(full_df["overall"])))
+    map_corr = sum(abs_corrs) / len(abs_corrs)
+    print("MAP Correlation: ", map_corr)
+    print("MAP Sum: ", sum(abs_corrs))
+
     R = 42
 
     valid_dp = False
