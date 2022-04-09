@@ -8,9 +8,31 @@ import os
 import seaborn as sns
 
 
-def exploratory_analysis(df):
-    personalities = pd.read_csv(
-        "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
+def exploratory_analysis(df, user_num, code):
+    if code.upper() == "K":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
+    elif code.upper() == "M":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Movie_and_TV_5_personality.csv")
+    elif code.upper() == "V":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Video_Games_5_personality.csv")
+    elif code.upper() == "D":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Digital_Music_5_personality.csv")
+    elif code.upper() == "P":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Pet_Supplies_5_personality.csv")
+    elif code.upper() == "G":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Patio_Lawn_and_Garden_5_personality.csv")
+    elif code.upper() == "S":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Sports_and_Outdoors_5_personality.csv")
+    elif code.upper() == "C":
+        personalities = pd.read_csv(
+            "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5_personality.csv")
 
     domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
 
@@ -42,7 +64,7 @@ def exploratory_analysis(df):
         plt.xlabel(pair[1])
         plt.ylabel(pair[2])
         plt.scatter(x, y)
-        plt.savefig("analysis_results/correlation_" + pair[1] + "_" + pair[2] + ".png")
+        plt.savefig("analysis_results/" + code +"_correlation_" + pair[1] + "_" + pair[2] + ".png")
         plt.clf()
 
     plt.close()
@@ -92,7 +114,8 @@ def exploratory_analysis(df):
     corr_matrix = df.corr(method="pearson")
     sns.heatmap(corr_matrix, vmin=-1., vmax=1., annot=True, fmt='.2f', cmap="YlGnBu", cbar=True, linewidths=0.5)
     plt.title("Pearson Correlation of Features")
-    plt.savefig("analysis_results/correlationmatrix.png", bbox_inches='tight')
+    save_name = "analysis_results/" + code + "_correlationmatrix" + "_" + str(user_num) + ".png"
+    plt.savefig(save_name, bbox_inches='tight')
     plt.close()
 
     ##############################################
@@ -105,17 +128,17 @@ def exploratory_analysis(df):
               4: {"Ext.": 0, "Agr.": 0, "Con.": 0, "Neu.": 0, "Ote.": 0},
               5: {"Ext.": 0, "Agr.": 0, "Con.": 0, "Neu.": 0, "Ote.": 0}}
     for index, row in tqdm(df.iterrows(), total=df.shape[0]):
-        temp_dict = totals[row["overall"]]
+        temp_dict = totals[round(row["overall"])]
         for k, v in temp_dict.items():
             temp_dict[k] += row[translate[k]]
-        totals[row["overall"]] = temp_dict
+        totals[round(row["overall"])] = temp_dict
 
     print(totals.items())
 
     for k, v in totals.items():
         plt.bar(v.keys(), v.values())
         plt.title("Traits Appearances in Ratings of " + str(k))
-        save_name = "analysis_results/TraitScoreCorrelation_" + str(k) + ".png"
+        save_name = "analysis_results/" + code + "_TraitScoreCorrelation_" + str(k) + ".png"
         plt.savefig(save_name)
         plt.clf()
 
@@ -135,12 +158,12 @@ def exploratory_analysis(df):
     for k, v in totals.items():
         plt.bar(v.keys(), v.values())
         plt.title("Normalized Traits Appearances in Ratings of " + str(k))
-        save_name = "analysis_results/NormalizedTraitScoreCorrelation_" + str(k) + ".png"
+        save_name = "analysis_results/" + code + "_NormalizedTraitScoreCorrelation_" + str(k) + ".png"
         filenames.append(save_name)
         plt.savefig(save_name)
         plt.clf()
 
-    with imageio.get_writer('analysis_results/NormalizedTraitScoreCorrelations.gif', mode='I') as writer:
+    with imageio.get_writer('analysis_results/' + code + '_NormalizedTraitScoreCorrelations.gif', mode='I') as writer:
         for filename in filenames:
             image = imageio.imread(filename)
             writer.append_data(image)
@@ -167,6 +190,9 @@ def exploratory_analysis(df):
             if k2 == "Ote.":
                 ote_scores.append(v2)
 
+    all_scores = [ext_scores, agr_scores, con_scores, nue_scores, ote_scores]
+    print("ALL SCORES: ", all_scores)
+
     X_axis = np.arange(5)
 
     plt.bar(X_axis - 0.4, ext_scores, 0.15, label='Extroversion')
@@ -180,7 +206,7 @@ def exploratory_analysis(df):
     plt.ylabel("Prominence")
     plt.title("Prominence of Personality Traits in Ratings Distribution")
     plt.legend()
-    plt.savefig("analysis_results/NormalizedTraitScoreCorrelations.png")
+    plt.savefig("analysis_results/" + code + "_NormalizedTraitScoreCorrelations.png")
     #################################
 
     print("---- Analysis Completed ----")
