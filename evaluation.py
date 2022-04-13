@@ -1,3 +1,6 @@
+# this file evaluates system performance
+
+# imports
 import math
 import pandas as pd
 from sklearn.metrics import r2_score
@@ -7,12 +10,10 @@ import numpy as np
 import seaborn as sns
 
 
+# evaluate performance
 def evaluate(df_code, model_name, personality_type, balance_type, results, train, test, user, display, num_features, full_df):
     # get the test split for the chosen user
-    # user_test = test.loc[test['reviewerID'] == user]
-    # user_test_relev = user_test[["asin", "overall"]].copy()
     user_test = full_df.loc[full_df['reviewerID'] == user]
-    # user_test_relev = full_df[["asin", "overall"]].copy()
     user_test_relev = user_test[["asin", "overall"]].copy()
 
     # rename overall to actual
@@ -29,12 +30,15 @@ def evaluate(df_code, model_name, personality_type, balance_type, results, train
 
     predictions_made = len(comparison)
 
+    # calculate evaluation metrics
     result = calc_metrics(df_code, comparison, display, num_features, model_name, personality_type, balance_type, predictions_made)
 
     return result
 
 
+# calculate evaluation metrics
 def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_type, predictions_made):
+    # create scatter plot if output requests it
     if disp:
         results_graph(df, model_name, personality_type, balance_type, df_code)
     rmse_df = df.copy()
@@ -66,14 +70,12 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
     for index, row in rmse_df.iterrows():
         rmse_list[int(row["actual"])-1].append(float(row["RMSE"]))
 
-    # # TODO: REMOVE THIS ITS ONLY TEMPORARY
-    # rmse_list = [[1], [1], [1], [1], [1]]
-
     r2 = r2_score(df["actual"], df["predictions"])
     n = df[df.columns[0]].count() # number of samples
-    # k = number of independant variables:
-    ar2 = 1 - ((1-r2)*(n-1)/(n-k-1))
+    ar2 = 1 - ((1-r2)*(n-1)/(n-k-1)) # k = number of independant variables:
 
+    # Try to calculate RMSE for each category. This is try except as no guarantee all users will have used each rating
+    #   at least once
     try:
         rmse_1 = math.sqrt(sum(rmse_list[0]) / len(rmse_list[0]))
     except:
@@ -105,10 +107,10 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
         print("Adjusted R2 Score: ", ar2)
         print()
 
-    # [1 RMSE, 2 RMSE, 3 RMSE, 4 RMSE, 5 RMSE, rmse]
     return [rmse_1, rmse_2, rmse_3, rmse_4, rmse_5, rmse, ar2, mae, std, predictions_made]
 
 
+# output scatter plot for predictions/actual if needed
 def results_graph(df, model_name, personality_type, balance_type, df_code):
     # create predictions/actual scatter plot
     title = df_code + "_" + model_name
@@ -120,18 +122,16 @@ def results_graph(df, model_name, personality_type, balance_type, df_code):
         title += "ratings_balanced"
     else:
         title += "not_rating_balanced"
-    # plot = df.plot.scatter(x='actual', y='predictions', c='DarkBlue')
-    # fig = plot.get_figure()
-    # fig.savefig("saved_results/" + title + ".png")
 
     scatplot = sns.regplot(x=df['actual'], y=df['predictions'])
     fig = scatplot.get_figure()
     fig.savefig("saved_results/" + title + ".png")
 
 
+# conduct evaluation on results for multiple users instead of singlue users
 def global_eval(df, indiv_dfs, test, user, full_df):
 
-    # only keep the best of each approach
+    # only keep the best of each approach, e.g. for scenario when testing two identical models with a slight variation
     best_idx = df.groupby(['Model'])['Overall RMSE'].transform(min) == df['Overall RMSE']
     best_df = df[best_idx].copy()
 
@@ -139,7 +139,6 @@ def global_eval(df, indiv_dfs, test, user, full_df):
     totals = {}
     for index, row in best_df.iterrows():
         totals[row["Model"]] = [row["RMSE 1"], row["RMSE 2"], row["RMSE 3"], row["RMSE 4"], row["RMSE 5"]]
-
     labels = [k for k, v in totals.items()]
     rmse1_scores = []
     rmse2_scores = []
@@ -152,16 +151,13 @@ def global_eval(df, indiv_dfs, test, user, full_df):
         rmse3_scores.append(v[2])
         rmse4_scores.append(v[3])
         rmse5_scores.append(v[4])
-
     X_axis = np.arange(len(labels))
-
     f, ax = plt.subplots(figsize=(18, 5))  # set the size that you'd like (width, height)
     plt.bar(X_axis - 0.3, rmse1_scores, 0.15, label='RMSE 1')
     plt.bar(X_axis - 0.15, rmse2_scores, 0.15, label='RMSE 2')
     plt.bar(X_axis, rmse3_scores, 0.15, label='RMSE 3')
     plt.bar(X_axis + 0.15, rmse4_scores, 0.15, label='RMSE 4')
     plt.bar(X_axis + 0.3, rmse5_scores, 0.15, label='RMSE 5')
-
     plt.xticks(X_axis, labels)
     plt.xlabel("Model")
     plt.ylabel("RMSE")
@@ -171,14 +167,12 @@ def global_eval(df, indiv_dfs, test, user, full_df):
 
     plt.close()
 
-    ############################
-    # plot just SVD vs 6SVD and SVD++ vs 6SVD++
+    # plot just SVD vs 6SVD
     totals = {}
     svd_names = ["SVD", "6-SVD"]
     for index, row in best_df.iterrows():
         if row["Model"] in svd_names:
             totals[row["Model"]] = [row["RMSE 1"], row["RMSE 2"], row["RMSE 3"], row["RMSE 4"], row["RMSE 5"]]
-
     labels = [k for k, v in totals.items()]
     rmse1_scores = []
     rmse2_scores = []
@@ -191,7 +185,6 @@ def global_eval(df, indiv_dfs, test, user, full_df):
         rmse3_scores.append(v[2])
         rmse4_scores.append(v[3])
         rmse5_scores.append(v[4])
-
     X_axis = np.arange(len(labels))
 
     f, ax = plt.subplots(figsize=(18, 5))  # set the size that you'd like (width, height)
@@ -210,6 +203,7 @@ def global_eval(df, indiv_dfs, test, user, full_df):
 
     plt.close()
 
+    # plot SVD++ results if necessary (experimentation was ceased with SVD++ due to large runtimes)
     totals = {}
     svd_names = ["SVD++", "6-SVD++"]
     for index, row in best_df.iterrows():
@@ -247,8 +241,7 @@ def global_eval(df, indiv_dfs, test, user, full_df):
 
     plt.close()
 
-    ############################
-
+    # graph results to compare to their counterparts
     groups = [["LightGBM", "RandomForest"], ["3-SVD", "SVD"], ["3-SVD++", "SVD++"], ["Baseline NeuralNet"]]
     for group in groups:
         fig, ax = plt.subplots(figsize=(8, 8))
@@ -260,8 +253,6 @@ def global_eval(df, indiv_dfs, test, user, full_df):
                 if item[3]:
                     lbl += " - Ratings-Balanced"
                 resultant_df = item[1]
-                # user_test = test.loc[test['reviewerID'] == user]
-                # user_test_relev = user_test[["asin", "overall"]].copy()
                 user_test = full_df.loc[full_df['reviewerID'] == user]
                 user_test_relev = full_df[["asin", "overall"]].copy()
 
