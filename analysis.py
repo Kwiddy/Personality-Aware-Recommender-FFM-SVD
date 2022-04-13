@@ -1,3 +1,6 @@
+# This file conducts exploratory data analysis on the chosen dataset
+
+# imports
 import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -8,7 +11,9 @@ import os
 import seaborn as sns
 
 
+# Input: dataset, user/total number of users being evaluated, code to identify which dataset is in use
 def exploratory_analysis(df, user_num, code):
+    # load and join relevant personality scores
     if code.upper() == "K":
         personalities = pd.read_csv(
             "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
@@ -36,17 +41,13 @@ def exploratory_analysis(df, user_num, code):
 
     domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
 
-    print(personalities)
-    pairs = list(itertools.combinations(domains, 2))
-
+    # Output the correlation between any pair of personality traits
     print("Calculating Correlations between Personality Domains...")
-
+    pairs = list(itertools.combinations(domains, 2))
     correlations = []
     for pair in pairs:
         correlation = abs(personalities[pair[0]].corr(personalities[pair[1]]))
         correlations.append([correlation, pair[0], pair[1]])
-
-    print(correlations)
 
     # Print all correlations
     for item in correlations:
@@ -56,7 +57,6 @@ def exploratory_analysis(df, user_num, code):
     # Graph the top 3 correlations
     sorted_correlations = sorted(correlations, reverse=True)
     strongest_corr = sorted_correlations[:3]
-
     for pair in strongest_corr:
         x = personalities[pair[1]].tolist()
         y = personalities[pair[2]].tolist()
@@ -66,12 +66,11 @@ def exploratory_analysis(df, user_num, code):
         plt.scatter(x, y)
         plt.savefig("analysis_results/" + code +"_correlation_" + pair[1] + "_" + pair[2] + ".png")
         plt.clf()
-
     plt.close()
 
     df = df.merge(personalities, on="reviewerID")
-    print(df)
-    # Normalize each of the personality columns -- THIS MIGHT BE WRONG
+
+    # Normalize each of the personality columns
     minval = df["Extroversion"].min()
     maxval = df["Extroversion"].max()
     df["Extroversion"] = df.progress_apply(lambda x: normalize(x.Extroversion, minval, maxval), axis=1)
@@ -88,28 +87,7 @@ def exploratory_analysis(df, user_num, code):
     maxval = df["Openness_to_Experience"].max()
     df["Openness_to_Experience"] = df.progress_apply(lambda x: normalize(x.Openness_to_Experience, minval, maxval), axis=1)
 
-    print(df)
-
-
-    print("--Extroversion--")
-    print(df["Extroversion"].min())
-    print(df["Extroversion"].max())
-    print("--Agreeableness--")
-    print(df["Agreeableness"].min())
-    print(df["Agreeableness"].max())
-    print("--conscientiousness--")
-    print(df["conscientiousness"].min())
-    print(df["conscientiousness"].max())
-    print("--Neurotisicm--")
-    print(df["Neurotisicm"].min())
-    print(df["Neurotisicm"].max())
-    print("--Openness_to_Experience--")
-    print(df["Openness_to_Experience"].min())
-    print(df["Openness_to_Experience"].max())
-
-    print(df)
-
-    ###############################################
+    # Save correlation matrix of features
     df = df.drop(columns="Unnamed: 0_y")
     corr_matrix = df.corr(method="pearson")
     sns.heatmap(corr_matrix, vmin=-1., vmax=1., annot=True, fmt='.2f', cmap="YlGnBu", cbar=True, linewidths=0.5)
@@ -118,10 +96,8 @@ def exploratory_analysis(df, user_num, code):
     plt.savefig(save_name, bbox_inches='tight')
     plt.close()
 
-    ##############################################
-
+    # Keep track of the total personality scores for each personality trait to indicate prominence
     translate = {"Ext.": "Extroversion", "Agr.": "Agreeableness", "Con.": "conscientiousness", "Neu.": "Neurotisicm", "Ote.": "Openness_to_Experience"}
-
     totals = {1: {"Ext.": 0, "Agr.": 0, "Con.": 0, "Neu.": 0, "Ote.": 0},
               2: {"Ext.": 0, "Agr.": 0, "Con.": 0, "Neu.": 0, "Ote.": 0},
               3: {"Ext.": 0, "Agr.": 0, "Con.": 0, "Neu.": 0, "Ote.": 0},
@@ -131,10 +107,10 @@ def exploratory_analysis(df, user_num, code):
         temp_dict = totals[round(row["overall"])]
         for k, v in temp_dict.items():
             temp_dict[k] += row[translate[k]]
+        # rounding so that the results which are floats (from combining identical user-item pairs, don't cause errors)
         totals[round(row["overall"])] = temp_dict
 
-    print(totals.items())
-
+    # Save traitscore correlations
     for k, v in totals.items():
         plt.bar(v.keys(), v.values())
         plt.title("Traits Appearances in Ratings of " + str(k))
@@ -153,7 +129,7 @@ def exploratory_analysis(df, user_num, code):
             temp_dict[k2] = (v2-minval)/(maxval-minval)
         totals[k] = temp_dict
 
-    # p0.11
+    # save normalized trait score correlations
     filenames = []
     for k, v in totals.items():
         plt.bar(v.keys(), v.values())
@@ -163,6 +139,7 @@ def exploratory_analysis(df, user_num, code):
         plt.savefig(save_name)
         plt.clf()
 
+    # save animation
     with imageio.get_writer('analysis_results/' + code + '_NormalizedTraitScoreCorrelations.gif', mode='I') as writer:
         for filename in filenames:
             image = imageio.imread(filename)
@@ -170,7 +147,7 @@ def exploratory_analysis(df, user_num, code):
 
     plt.close()
 
-    #################################
+    # create a multi-bar chart for normalized trait score correlations
     labels = ["1", "2", "3", "4", "5"]
     ext_scores = []
     agr_scores = []
@@ -189,28 +166,22 @@ def exploratory_analysis(df, user_num, code):
                 nue_scores.append(v2)
             if k2 == "Ote.":
                 ote_scores.append(v2)
-
-    all_scores = [ext_scores, agr_scores, con_scores, nue_scores, ote_scores]
-    print("ALL SCORES: ", all_scores)
-
     X_axis = np.arange(5)
-
     plt.bar(X_axis - 0.4, ext_scores, 0.15, label='Extroversion')
     plt.bar(X_axis - 0.2, agr_scores, 0.15, label='Agreeableness')
     plt.bar(X_axis, con_scores, 0.15, label='Conscientiousness')
     plt.bar(X_axis + 0.2, nue_scores, 0.15, label='Neurotisicm')
     plt.bar(X_axis + 0.4, ote_scores, 0.15, label='Openness to Experience')
-
     plt.xticks(X_axis, labels)
     plt.xlabel("Rating")
     plt.ylabel("Prominence")
     plt.title("Prominence of Personality Traits in Ratings Distribution")
     plt.legend()
     plt.savefig("analysis_results/" + code + "_NormalizedTraitScoreCorrelations.png")
-    #################################
 
     print("---- Analysis Completed ----")
 
 
+# Function to normalize input
 def normalize(value, min, max):
     return (value-min) / (max-min)
