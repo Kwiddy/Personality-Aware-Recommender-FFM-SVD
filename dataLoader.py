@@ -1,4 +1,10 @@
-import pandas as pd 
+# This file handles:
+# dataset pre-filtering techniques from user input,
+# evaluation user selection,
+# and data loading from files
+
+# import
+import pandas as pd
 import gzip
 import json
 import math
@@ -12,13 +18,17 @@ from operator import itemgetter
 import numpy as np
 import pickle
 
+# define random seed
 random.seed(42)
 
 
+# dataset retriever
 def getDF(path, parent_path, extension):
+    # format path
     new_path = parent_path + extension
     duplicate_path = parent_path + "clean_" + extension
 
+    # load dataframe if it already exists, otherwise, create from json
     if exists(new_path):
         print("Full dataframe already exists...")
         print("Retrieving full dataframe...")
@@ -31,6 +41,7 @@ def getDF(path, parent_path, extension):
         print(new_path)
         df.to_csv(new_path)
 
+    # clean dataframe if needed, otherwise load (cleaning involves remove user-item pair duplicates with averaging)
     if exists(duplicate_path):
         print("Clean dataframe already exists...")
         print("Retrieving clean dataframe...")
@@ -44,6 +55,8 @@ def getDF(path, parent_path, extension):
     return df, reduced_df
 
 
+# reduce the DF
+# This function allows the user to choose if they want to limit the number of users and how they wish to do so
 def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_limit_method, first_time, g_abs_num):
     valid = False
     while not valid:
@@ -65,10 +78,8 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                     yn3 = input("Personal or Non-Personal Refinement? [P/N]: ")
                 if yn3.upper() == "N":
                     print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
-                    print(str(df['reviewerID'].nunique()))
                     valid3 = True
                     limit_method = yn3
-                    # get n most common reviewers
                     valid6 = False
                     while not valid6:
                         if g_abs_num is not None:
@@ -175,6 +186,7 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
             return df, restrict_reviews, limit_method, limit, sub_limit_method, g_abs_num
 
 
+# Stratified pre-filtering approach
 def stratified_sampling(n, df, chosen, code):
     print("Conducting Stratified Sampling...")
     k = math.floor(n/5)
@@ -184,6 +196,7 @@ def stratified_sampling(n, df, chosen, code):
     steps = 1/(k-1)
     new_df = pd.DataFrame()
 
+    # load personality data
     if code.upper() == "K":
         personalities = pd.read_csv(
             "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
@@ -211,7 +224,7 @@ def stratified_sampling(n, df, chosen, code):
 
     domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
 
-    # for each domain, take the k/2 lowest and k/2 highest
+    # for each domain, take the k/2 lowest and k/2 highest, where k = n/5 for the n target users desired
     ids = []
     for i in range(5):
         if i == 4:
@@ -230,40 +243,12 @@ def stratified_sampling(n, df, chosen, code):
         personalities = personalities[~personalities['reviewerID'].isin(ids)]
 
     ids.append(chosen)
-    print(len(ids))
-
     reduced_df = df[df['reviewerID'].isin(ids)]
-
-    # saved_df = df.copy()
-    # df = df.merge(personalities, on="reviewerID")
-    #
-    # new_df = df.copy()[0:0]
-    #
-    # domains = ["Extroversion", "Agreeableness", "conscientiousness", "Neurotisicm", "Openness_to_Experience"]
-    #
-    # count = 1
-    # for domain in domains:
-    #     print(str(count) + "/5")
-    #     count += 1
-    #     target = 0
-    #     for i in range(int(k)):
-    #         row_to_add = df.iloc[(df[domain] - target).abs().argsort()[0]]
-    #         new_df = new_df.append(row_to_add)
-    #         target += steps
-    #
-    # new_df.append(new_df)
-    #
-    # # get ids of chosen_users
-    # ids = new_df["reviewerID"].unique()
-    # ids = np.append(ids, chosen)
-    # print(str(len(ids)) + " chosen users")
-    #
-    # print("Chosen Stratified Sample")
-    # final_sample = saved_df[saved_df['reviewerID'].isin(ids)]
 
     return reduced_df
 
 
+# Take the users with the most reviews pre-filtering approach
 def most_common(n, df, chosen):
     frequents = df['reviewerID'].value_counts()[:n-1].index.tolist()
 
@@ -275,6 +260,7 @@ def most_common(n, df, chosen):
     return reduced_df
 
 
+# Select random users pre-filtering approach
 def select_random(n, df, chosen):
     all_users = df['reviewerID'].unique().tolist()
     chosen_users = random.sample(all_users, n-1)
@@ -286,6 +272,8 @@ def select_random(n, df, chosen):
     return reduced_df
 
 
+# This function finds the best users to select in each dataset to evaluate in that dataset
+# It does this by finding those with a suitable number of reviews, and ranking by the best rating distribution
 def find_chosen(df, code):
 
     valid = False
@@ -299,22 +287,17 @@ def find_chosen(df, code):
 
     print("Retrieving chosen users")
     file_name = "intermediate_results/" + code.upper() + "_top_users.pkl"
+
+    # try and load previously calculated results for best users if possible
     try:
         open_file = open(file_name, "rb")
         spread = pickle.load(open_file)
         open_file.close()
-    except:
 
+    except:
         print("calculating reviews for each user")
         counted = dict(df['reviewerID'].value_counts())
-        print("len counted: ", len(counted))
-        # i = 1
-        # for k, v in counted.items():
-        #     print(k, v)
-        #     i += 1
-        #     if i == 20:
-        #         break
-        #
+
         users_ratings = {}
         grouped = df.groupby(['reviewerID'])
         max_count = 0
@@ -325,7 +308,7 @@ def find_chosen(df, code):
                 max_count = sum(counts.values())
             if sum(counts.values()) >= 1:
                 users_ratings[name] = counts
-        #
+
         for k, v in tqdm(users_ratings.items()):
             temp = [0, 0, 0, 0, 0]
             for k2, v2 in v.items():
@@ -335,13 +318,10 @@ def find_chosen(df, code):
                 except:
                     pass
             users_ratings[k] = temp
-        #
+
         # # calc rmse of each list
         target = [0.2, 0.2, 0.2, 0.2, 0.2]
         spread = []
-        # for k, v in tqdm(users_ratings.items()):
-        #     rms = mean_squared_error(target, v, squared=False)
-        #     spread.append([k, rms * (max_count-sum(counts.values()))])
 
         rms_dict = {}
         max_rms = 0
@@ -355,17 +335,17 @@ def find_chosen(df, code):
         res = dict(sorted(counted.items(), key=itemgetter(1), reverse=True)[:math.ceil(len(counted)/1000)])
 
         for k, v in counted.items():
-            # spread.append([k, (max_rms-rms_dict[k])*(counted[k])])
             if k in res:
                 spread.append([k, rms_dict[k]])
 
         spread = sorted(spread, key=lambda x: x[1], reverse=True)
-        # spread = sorted(spread, key=lambda x: x[1], reverse=False)
 
+        # save results to reduce computation in the future
         open_file = open(file_name, "wb")
         pickle.dump(spread, open_file)
         open_file.close()
 
+    # select n best users
     reduced = spread[-n:]
     chosen = []
     for item in reduced:
