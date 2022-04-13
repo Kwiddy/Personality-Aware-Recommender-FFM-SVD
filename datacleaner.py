@@ -1,3 +1,4 @@
+# import
 import pandas as pd
 
 
@@ -15,7 +16,6 @@ def clean(path, new_path):
 
     reduced = reduced.drop(columns=["overall_x"])
     reduced = reduced.rename(columns={"overall_y": "overall"}).reset_index()
-    print(reduced.columns)
     reduced = reduced.drop(columns=["Unnamed: 0"])
 
     reduced.to_csv(new_path)
