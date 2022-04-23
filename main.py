@@ -256,9 +256,9 @@ def select_method(full_df, train, test, chosen_user, code, user_num):
                 if pers_yes is not None:
                     yn = pers_yes
                 else:
-                    # yn = input("Include personality in model / Do All? [Y/N/A]: ")
-                    yn = "Y"   # The evaluation of non-personality models is now conducted by choosing to evaluate on
-                                # all methods
+                    yn = input("Evaluate 1 Model [Y] or All? [Y/A]: ")
+                    # yn = "Y"   # The evaluation of non-personality models is now conducted by choosing to evaluate on
+                    #             # all methods
                 if yn.upper() == "Y":
                     pers_yes = yn
                     print("Using Personality....")
@@ -441,8 +441,11 @@ def select_method(full_df, train, test, chosen_user, code, user_num):
 
             # output the most recommended items
             else:
+                print()
                 print("Most recommended")
                 print(recommendations_df.head(10))
+                print()
+
                 response = evaluate(code, m_name, p_type, b_type, recommendations_df, train, test, chosen_user, True, feature_nums[m_choice], full_df)
                 g_results.append(response)
 

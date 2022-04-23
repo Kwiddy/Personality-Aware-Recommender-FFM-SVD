@@ -8,6 +8,8 @@ from collections import Counter
 from sklearn import preprocessing
 import numpy as np
 
+# The new LIWC dictionary can be found at: https://www.liwc.app/
+
 # LIWC NIH correlations from:
 # Yarkoni, T.. "Personality in 100,000 words: A large-scale analysis of personality
 # and word use among bloggers." \textit{Journal of research in personality 44.3} (2010): 363-373.

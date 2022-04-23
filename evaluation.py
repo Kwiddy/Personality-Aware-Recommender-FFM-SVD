@@ -45,8 +45,8 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
     rmse_df["RMSE"] = (df["actual"]-df["predictions"])**2
     rmse_df["AbsError"] = abs(df["actual"]-df["predictions"])
 
-    print(model_name)
-    print(rmse_df)
+    # print(model_name)
+    # print(rmse_df)
     
     rmse = math.sqrt(rmse_df["RMSE"].mean())
 
@@ -97,15 +97,16 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
     except:
         rmse_5 = np.NaN
 
-    if disp:
-        print("1 Rating RMSE: ", rmse_1)
-        print("2 Rating RMSE: ", rmse_2)
-        print("3 Rating RMSE: ", rmse_3)
-        print("4 Rating RMSE: ", rmse_4)
-        print("5 Rating RMSE: ", rmse_5)
-        print()
-        print("Adjusted R2 Score: ", ar2)
-        print()
+    ## this has been changed to always display in global evaluation
+    # if disp:
+        # print("1 Rating RMSE: ", rmse_1)
+        # print("2 Rating RMSE: ", rmse_2)
+        # print("3 Rating RMSE: ", rmse_3)
+        # print("4 Rating RMSE: ", rmse_4)
+        # print("5 Rating RMSE: ", rmse_5)
+        # print()
+        # print("Adjusted R2 Score: ", ar2)
+        # print()
 
     return [rmse_1, rmse_2, rmse_3, rmse_4, rmse_5, rmse, ar2, mae, std, predictions_made]
 

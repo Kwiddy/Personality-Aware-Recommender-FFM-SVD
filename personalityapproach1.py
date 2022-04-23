@@ -80,8 +80,11 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(small_df, reader)
 
-    # choose verbosity
-    vb = True
+    ## choose verbosity
+    # vb = True
+    vb = False
+    print()
+    print("Generating predictions...")
 
     ## original parameters
     # id_importance = 1
