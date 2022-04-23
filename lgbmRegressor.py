@@ -101,9 +101,6 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     y_target = target[target_col]
     x = neighbourhood.drop(columns=target_col)
     y = neighbourhood[target_col]
-    x_train, x_test, y_train, y_test = train_test_split(x, y,
-                                                          test_size=0.4,
-                                                          random_state=R)
 
     # define model to be used
     if model_choice == "L":
@@ -113,8 +110,11 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
 
     # construct grid search and fit
     param_grid = create_grid(model_choice)
-    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, verbose=2)
-    grid_search.fit(x_train, y_train)
+    # cv has been changed to 2 after conducting grid search to save computation time, it was originally 3
+    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=2, verbose=2)
+    # grid_search.fit(x_train, y_train)
+    grid_search.fit(x, y)
+
 
     grid_used = True
 
@@ -127,15 +127,6 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     to_predict = to_predict[~to_predict.index.duplicated(keep='first')].reset_index()
 
     predictions = grid_search.predict(x_target)
-
-    # output feature importance if relevant
-    if disp and not grid_used:
-        print()
-        print("LightGBM Feature importances: ")
-        hd = list(x_train.columns)
-        for i, f in zip(hd, model.feature_importances_):
-            print(i, round(f * 100, 2))
-        print()
 
     # clean and sort results
     result = x_target.copy()
@@ -151,6 +142,7 @@ def create_lightgbm(full_df, train, test, chosen_user, model_choice, code, disp,
     filtered_result = filtered_result[~filtered_result.index.duplicated(keep='first')].reset_index()
 
     return filtered_result
+
 
 # grid search, comments show values tested, these have been commented out to save computation time
 def create_grid(approach):
