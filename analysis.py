@@ -89,7 +89,9 @@ def exploratory_analysis(df, user_num, code):
 
     # Save correlation matrix of features
     df = df.drop(columns="Unnamed: 0_y")
-    corr_matrix = df.corr(method="pearson")
+    corr_df = df.copy()
+    corr_df.rename(columns={'conscientiousness': 'Conscientiousness', "Openness_to_Experience": "Openness to Experience", "Unnamed: 0_x": "index"}, inplace=True)
+    corr_matrix = corr_df.corr(method="pearson")
     sns.heatmap(corr_matrix, vmin=-1., vmax=1., annot=True, fmt='.2f', cmap="YlGnBu", cbar=True, linewidths=0.5)
     plt.title("Pearson Correlation of Features")
     save_name = "analysis_results/" + code + "_correlationmatrix" + "_" + str(user_num) + ".png"
@@ -174,8 +176,8 @@ def exploratory_analysis(df, user_num, code):
     plt.bar(X_axis + 0.4, ote_scores, 0.15, label='Openness to Experience')
     plt.xticks(X_axis, labels)
     plt.xlabel("Rating")
-    plt.ylabel("Prominence")
-    plt.title("Prominence of Personality Traits in Ratings Distribution")
+    plt.ylabel("Normalized Prominence")
+    plt.title("Normalized Prominence of Personality Traits in Ratings Distribution")
     plt.legend()
     plt.savefig("analysis_results/" + code + "_NormalizedTraitScoreCorrelations.png")
 
