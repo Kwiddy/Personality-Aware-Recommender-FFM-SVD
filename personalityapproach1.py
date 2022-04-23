@@ -1,18 +1,18 @@
-
-from surprise import Reader, Dataset, SVD, SVDpp
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
-import random
-import math
-
-random.seed(42)
-
 # the svd usage in this approach has been adapted from the example found in
 # https://predictivehacks.com/how-to-run-recommender-systems-in-python/
 
+# imports
+from surprise import Reader, Dataset, SVD, SVDpp
+import pandas as pd
+import random
 
+# set random seed
+random.seed(42)
+
+
+# FFM-SVD and SVD approach
 def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_personality, split):
+    # load relevant dataset
     if code.upper() == "K":
         personalities = pd.read_csv(
             "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/Kindle_Store_5_personality.csv")
@@ -37,9 +37,9 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     elif code.upper() == "C":
         personalities = pd.read_csv(
             "Datasets/jianmoNI_UCSD_Amazon_Review_Data/2018/small/5-core/CDs_and_Vinyl_5_personality.csv")
-
     full_df = full_df.merge(personalities, on="reviewerID")
 
+    # calculate MAP correlations
     pers_domains = ["Extroversion", "Openness_to_Experience", "Agreeableness", "conscientiousness", "Neurotisicm"]
     abs_corrs = []
     for personality in pers_domains:
@@ -50,6 +50,7 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
 
     R = 42
 
+    # choose bucketing precision
     valid_dp = False
     if dp is None:
         while not valid_dp:
@@ -69,33 +70,20 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     small_df = full_df[["reviewerID", "asin", "overall"]].copy()
 
     seen_items = small_df.loc[small_df['reviewerID'] == chosen_user, 'asin'].tolist()
-    # print("seen items length: ", len(seen_items))
-    # test_items = random.sample(seen_items, math.floor(len(seen_items)*split))
     test_items = test
-    # print("test items to remove: ", test_items)
     train_items = train
 
-    # TODO: this is the key line, if commented then predictions vary, otherwise they don't
+    # remove test items
     small_df = small_df.drop(small_df[(small_df['asin'].isin(test_items)) & (small_df['reviewerID'] == chosen_user)].index)
 
-
-    # print(len(small_df))
-    # exit()
-
+    # load data
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(small_df, reader)
 
-    # get the list of the ids
-    # unique_ids = small_df['asin'].unique()
-    # get the list of the ids that the user has rated
-    # seen_ids = train.loc[train['reviewerID'] == chosen_user, 'asin']
-
-    # remove the rated movies for the recommendations, leaves only the items that the user hasn't seen
-    # and then its predicting how much the user would like unseen items?
-    # items_to_predict = np.setdiff1d(unique_ids, seen_ids)
-
+    # choose verbosity
     vb = True
 
+    ## original parameters
     # id_importance = 1
     # n_factors = 100
     # n_epochs = 20
@@ -112,20 +100,21 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
     lr_all = 0.0062
     reg_all = 0.01
 
+    # create model
     if plus_bool:
         algo = SVDpp(random_state=R, verbose=vb, n_factors=n_factors, n_epochs=n_epochs, init_mean=init_mean, init_std_dev=init_std_dev, lr_all=lr_all, reg_all=reg_all)
     else:
         algo = SVD(random_state=R, verbose=vb, n_factors=n_factors, n_epochs=n_epochs, init_mean=init_mean, init_std_dev=init_std_dev, lr_all=lr_all, reg_all=reg_all)
 
+    # fit model
     algo.fit(data.build_full_trainset())
 
-    # TODO: Make test items the one to predict here
-
+    # predict test items
     my_recs1 = []
-    # for iid in items_to_predict:
     for iid in test_items:
         my_recs1.append((iid, algo.predict(uid=chosen_user, iid=iid).est))
 
+    # create other 5 SVDs if FFM-SVD
     if use_personality:
         chosen_peronsality_row = personalities.loc[personalities['reviewerID'] == chosen_user]
         ext_score = round(float(chosen_peronsality_row["Extroversion"]), dp)
@@ -134,35 +123,19 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
         con_Score = round(float(chosen_peronsality_row["conscientiousness"]), dp)
         neu_score = round(float(chosen_peronsality_row["Neurotisicm"]), dp)
 
-        # corr_ext, my_recs2 = personality_svd("Extroversion", full_df, items_to_predict, ext_score, plus_bool, R, chosen_user)
-        # corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, items_to_predict, ote_score, plus_bool, R, chosen_user)
-        # corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, items_to_predict, agr_score, plus_bool, R, chosen_user)
-        # corr_con, my_recs5 = personality_svd("conscientiousness", full_df, items_to_predict, con_Score, plus_bool, R, chosen_user)
-        # corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, items_to_predict, neu_score, plus_bool, R, chosen_user)
-
         corr_ext, my_recs2 = personality_svd("Extroversion", full_df, test_items, ext_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
         corr_ote, my_recs3 = personality_svd("Openness_to_Experience", full_df, test_items, ote_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
         corr_agr, my_recs4 = personality_svd("Agreeableness", full_df, test_items, agr_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
         corr_con, my_recs5 = personality_svd("conscientiousness", full_df, test_items, con_Score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
         corr_neu, my_recs6 = personality_svd("Neurotisicm", full_df, test_items, neu_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all)
 
-        print("Summed correlation: ", sum([corr_ote, corr_ext, corr_con, corr_neu, corr_agr]))
+        # determine the ID importance
         id_importance = 2.2 * sum([corr_ote, corr_ext, corr_con, corr_neu, corr_agr])
 
-        # corrs = [corr_neu, corr_agr, corr_con, corr_ext, corr_ote]
-        # id_importance = sum(corrs) / len(corrs)
+        ## this is now ouputted elsewhere
+        # map_corr = (corr_con + corr_agr + corr_ote + corr_neu + corr_ext) / 5
+        # print("Mean Absolute Personality (MAP) Correlation: ", map_corr)
 
-        # print(corr_ext)
-        # print(corr_ote)
-        # print(corr_agr)
-        # print(corr_con)
-        # print(corr_neu)
-        # exit()
-
-        map_corr = (corr_con + corr_agr + corr_ote + corr_neu + corr_ext) / 5
-        print("Mean Absolute Personality (MAP) Correlation: ", map_corr)
-
-    # ####################################
 
     my_recs = []
 
@@ -185,18 +158,16 @@ def approach1(full_df, train, test, chosen_user, plus_bool, code, disp, dp, use_
         mean = sum(results) / len(results)
         my_recs.append((my_recs1[i][0], mean))
 
+    # save results
     result = pd.DataFrame(my_recs, columns=['asin', 'predictions']).sort_values('predictions', ascending=False)
-    # print(result)
 
     return result, dp
 
 
+# function to create a personality-trait SVD
 def personality_svd(personality, full_df, items_to_predict, user_score, plus_bool, R, chosen_user, vb, n_factors, n_epochs, init_mean, init_std_dev, lr_all, reg_all):
-    # reduce
     small_df = full_df[[personality, "reviewerID", "asin", "overall"]].copy()
-
     small_df = small_df.drop(small_df[(small_df['asin'].isin(items_to_predict)) & (small_df['reviewerID'] == chosen_user)].index)
-
     small_df = small_df[[personality, "asin", "overall"]]
 
     reader = Reader(rating_scale=(1, 5))
