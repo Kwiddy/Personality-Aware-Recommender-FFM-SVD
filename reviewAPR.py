@@ -1,6 +1,6 @@
+# imports
 from empath import Empath
 import pandas as pd
-from os.path import exists
 from tqdm import tqdm
 import liwc
 import re
@@ -8,7 +8,9 @@ from collections import Counter
 from sklearn import preprocessing
 import numpy as np
 
-# See LIWC_FFM_CORRELATIONS.xlsx for references
+# LIWC NIH correlations from:
+# Yarkoni, T.. "Personality in 100,000 words: A large-scale analysis of personality
+# and word use among bloggers." \textit{Journal of research in personality 44.3} (2010): 363-373.
 liwc_to_ffm = {
     "pronoun": [0.06, 0.06, -0.21, 0.11, -0.02],
     "i": [0.12, 0.01, -0.16, 0.05, 0],
@@ -64,13 +66,12 @@ liwc_to_ffm = {
 }
 
 
+# calculate empath scores (discontinued - moved to LIWC instead)
 def calc_empath(corpus):
     lexicon = Empath()
     emph_scores = lexicon.analyze(corpus, normalize=True)
     sorted_emph_scores = {k: v for k, v in sorted(emph_scores.items(), key=lambda item: item[1])}
-    
-    
-    print(sorted_emph_scores)
+
     for k, v in sorted_emph_scores.items():
         if v != 0.0:
             print(k + ": " + str(v))
@@ -91,12 +92,10 @@ def calc_liwc(corpus):
     tokens = tokenize(corpus)
     counts = Counter(category for token in tokens for category in parse(token))
 
-    # print(counts)
-    # exit()
-
     return counts
 
 
+# convert to ffm scores
 def convert_to_ffm(liwc):
     category_scores = []
     for k, v in liwc.items():
@@ -112,21 +111,11 @@ def convert_to_ffm(liwc):
             total += category_scores[j][i]
         ffm_scores.append(round(total, 3))
 
-    # print(ffm_scores)
-
-    # need to turn into the right scale, or just normalize?
-
     # normalize
     np_ffm_scores = np.asarray(ffm_scores)
-    # print(np_ffm_scores)
     norm_ffm_scores = preprocessing.normalize([np_ffm_scores])
-    # print(norm_ffm_scores)
     final_ffm_scores = norm_ffm_scores.tolist()
 
-
-    # need to have normalized scores because different users will have different amounts of data
-
-    # print(final_ffm_scores[0])
     return final_ffm_scores[0]
 
 
@@ -146,8 +135,6 @@ def generate_scores(df, parent_path, ext):
         corpus = new.iloc[0]['corpus']
         corpus = corpus.lower()
 
-        # emph_scores = calc_empath(corpus)
-
         liwc_scores = calc_liwc(corpus)
         ffm_scores = convert_to_ffm(liwc_scores)
 
@@ -166,7 +153,7 @@ def generate_scores(df, parent_path, ext):
         ffm_df[col] += abs(ffm_df[col].min())
         ffm_df[col] *= 1 / ffm_df[col].max()
 
-    new_path = parent_path + ext + "_personality.csv" #"Movie_and_TV_5_personality.csv"
+    new_path = parent_path + ext + "_personality.csv"
     ffm_df.to_csv(new_path)
 
     return ffm_df
@@ -174,52 +161,14 @@ def generate_scores(df, parent_path, ext):
 
 # combine user reviews
 def create_corpora(df, parent_path, ext):
-    new_path = parent_path + ext + "_reviews.csv"# "Movie_and_TV_5_reviews.csv"
-
-    # print("Creating reviews dataframe...")
-    # if exists(new_path):
-    #     reviews_df = pd.read_csv(new_path)
-    # else:
-    #     reviews_df = df[["reviewerID", "reviewText"]].copy()
-    #     reviews_df = reviews_df.dropna()
-    #     reviews_df.to_csv(new_path)
+    new_path = parent_path + ext + "_reviews.csv"
 
     reviews_df = df[["reviewerID", "reviewText"]].copy()
     reviews_df = reviews_df.dropna()
     reviews_df.to_csv(new_path)
         
     # create corpora df
-    new_path = parent_path + ext + "_corpora.csv" #+ "Movie_and_TV_5_corpora.csv"
-    # print("Creating corpus dataframe...")
-    # if exists(new_path):
-    #     corpora_df = pd.read_csv(new_path)
-    # else:
-    #     corpora = {}
-    #
-    #     for index, row in tqdm(reviews_df.iterrows()):
-    #         if row["reviewerID"] in corpora:
-    #             try:
-    #                 corpora[row["reviewerID"]] += " " + row["reviewText"]
-    #             except:
-    #                 print("DATA ERROR ON ROW BELOW")
-    #                 print(row)
-    #         else:
-    #             corpora[row["reviewerID"]] = row["reviewText"]
-    #
-    #     print("Number of reviewers: " + str(len(corpora)))
-    #     avg=[]
-    #     for key, value in corpora.items():
-    #         avg.append(len(value))
-    #     mean = sum(avg) / len(avg)
-    #     print("Average Corpus length " + str(mean))
-    #
-    #     corpora_df = pd.DataFrame.from_dict(corpora, orient="index").reset_index()
-    #     corpora_df.columns = ["reviewerID", "corpus"]
-    #
-    #     # print("Printing Corpora DF")
-    #     # print(corpora_df)
-    #     print("Saving Corpora DF to CSV")
-    #     corpora_df.to_csv(new_path)
+    new_path = parent_path + ext + "_corpora.csv"
     corpora = {}
 
     for index, row in tqdm(reviews_df.iterrows()):
@@ -242,14 +191,13 @@ def create_corpora(df, parent_path, ext):
     corpora_df = pd.DataFrame.from_dict(corpora, orient="index").reset_index()
     corpora_df.columns = ["reviewerID", "corpus"]
 
-    # print("Printing Corpora DF")
-    # print(corpora_df)
     print("Saving Corpora DF to CSV")
     corpora_df.to_csv(new_path)
 
     return corpora_df
 
 
+# main function defining APR pipeline
 def review_APR(df, parent_path, extension):
     # "Digital_Music_5.csv"
     sub_extension = extension[:-4]
@@ -258,12 +206,6 @@ def review_APR(df, parent_path, extension):
     corpora_df = create_corpora(df, parent_path, sub_extension)
 
     # create scores from corpus
-    # new_path = parent_path + sub_extension + "_personality.csv"# + "Movie_and_TV_5_personality.csv"
-    # if exists(new_path):
-    #     print("Personality scores already exist...")
-    #     ffm_df = pd.read_csv(new_path)
-    # else:
-    #     ffm_df = generate_scores(corpora_df, parent_path, sub_extension)
     ffm_df = generate_scores(corpora_df, parent_path, sub_extension)
 
     return ffm_df
