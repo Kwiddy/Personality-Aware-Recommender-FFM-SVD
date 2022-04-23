@@ -1,7 +1,6 @@
 # imports
 from reviewAPR import review_APR
 from dataLoader import getDF, reduceDF, find_chosen
-from svd2 import create_svd_2
 from lgbmRegressor import create_lightgbm
 from evaluation import evaluate, global_eval
 from analysis import exploratory_analysis
