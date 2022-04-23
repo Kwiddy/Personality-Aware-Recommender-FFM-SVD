@@ -75,7 +75,7 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                 if limit_method is not None:
                     yn3 = limit_method
                 else:
-                    yn3 = input("Personal or Non-Personal Refinement? [P/N]: ")
+                    yn3 = input("Targeted or Non-Targeted Refinement? [P/N]: ")
                 if yn3.upper() == "N":
                     print("Maximum number of users: ", len(df['reviewerID'].value_counts()))
                     valid3 = True
@@ -135,7 +135,6 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                             stratified = True
                             neighbours_df = get_neighbourhood(chosen, df_code, stratified, 0) # 0 = log
                             neighbours = neighbours_df["reviewerID"].unique()
-                            print(len(neighbours), " chosen")
                             reduced_df = df[df['reviewerID'].isin(neighbours)]
                         elif yn5.upper() == "L":
                             sub_limit_method = yn5
@@ -143,7 +142,6 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                             stratified = True
                             neighbours_df = get_neighbourhood(chosen, df_code, stratified, 1) # 1 = lin
                             neighbours = neighbours_df["reviewerID"].unique()
-                            print(len(neighbours), " chosen")
                             reduced_df = df[df['reviewerID'].isin(neighbours)]
                         elif yn5.upper() == "N":
                             sub_limit_method = yn5
@@ -151,7 +149,6 @@ def reduceDF(df, df_code, chosen, restrict_reviews, limit_method, limit, sub_lim
                             stratified = False
                             neighbours_df = get_neighbourhood(chosen, df_code, stratified, None)
                             neighbours = neighbours_df["reviewerID"].unique()
-                            print(len(neighbours), " chosen")
                             reduced_df = df[df['reviewerID'].isin(neighbours)]
                         else:
                             print("Invalid input")
