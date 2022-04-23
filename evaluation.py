@@ -55,15 +55,16 @@ def calc_metrics(df_code, df, disp, k, model_name, personality_type, balance_typ
 
     mae = rmse_df["AbsError"].mean()
 
-    if disp:
-        print(rmse_df)
-        print()
-        print(rmse_df.describe())
-        print()
-        print("RMSE: ", rmse)
-        print("MAE: ", mae)
-        print("StD: ", std)
-        print()
+    ## this has been changed to always display in global evaluation
+    # if disp:
+    #     print(rmse_df)
+    #     print()
+    #     print(rmse_df.describe())
+    #     print()
+    #     print("RMSE: ", rmse)
+    #     print("MAE: ", mae)
+    #     print("StD: ", std)
+    #     print()
 
     # RMSE for each different scoring
     rmse_list = [[], [], [], [], []]
